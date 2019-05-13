@@ -1,0 +1,16 @@
+[package]
+name = "fastuuid"
+version = "0.1.0"
+authors = ["Omer Katz <omer.drow@gmail.com>"]
+
+[lib]
+name = "fastuuid"
+crate-type = ["cdylib"]
+
+[dependencies.pyo3]
+version = "0.6.0"
+features = ["extension-module"]
+
+[dependencies.uuid]
+version = "0.7.4"
+features = ["v1", "v3", "v4", "v5", "u128"]

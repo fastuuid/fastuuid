@@ -1,5 +1,5 @@
 import re
-from fastuuid import uuid4, UUID
+from fastuuid import uuid3, uuid4, UUID
 import uuid
 import pytest
 
@@ -46,3 +46,7 @@ def test_fields():
     expected = uuid.uuid4()
 
     assert str(UUID(fields=expected.fields)) == str(expected)
+
+
+# def test_uuid3():
+#     assert UUID_REGEX.match(str(uuid3(uuid4(), "foo")))

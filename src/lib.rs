@@ -1,6 +1,7 @@
 extern crate pyo3;
 extern crate uuid;
 
+use std::iter;
 use pyo3::class::PyObjectProtocol;
 use pyo3::exceptions::{TypeError, ValueError};
 use pyo3::prelude::*;
@@ -141,12 +142,30 @@ fn fastuuid(py: Python, m: &PyModule) -> PyResult<()> {
         }
     }
 
-    // #[pyfn(m, "uuid3")]
-    // fn uuid3(namespace: UUID, name: &PyBytes, py: Python) -> UUID {
-    //     UUID {
-    //         handle: Uuid::new_v3(&namespace.handle, name.as_bytes()),
-    //     }
-    // }
+    #[pyfn(m, "uuid3")]
+    fn uuid3(namespace: PyObject, name: &PyBytes, py: Python) -> PyResult<UUID> {
+        // TODO: Figure out why this segfaults
+        let namespace = if let Ok(n) = <UUID as PyTryFrom>::try_from(namespace.as_ref(py)) {
+            n
+        } else {
+            return Err(PyErr::new::<TypeError, &str>("Expected a UUID object"));
+        };
+
+        Ok(UUID {
+            handle: Uuid::new_v3(&namespace.handle, name.as_bytes()),
+        })
+    }
+
+    #[pyfn(m, "uuid4_bulk")]
+    fn uuid4_bulk(py: Python, n: usize) -> Vec<UUID> {
+        py.allow_threads(|| {
+            iter::repeat_with(|| {
+                UUID {
+                    handle: Uuid::new_v4(),
+                }
+            }).take(n).collect()
+        })
+    }
 
     #[pyfn(m, "uuid4")]
     fn uuid4() -> UUID {

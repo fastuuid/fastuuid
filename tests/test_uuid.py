@@ -42,6 +42,7 @@ def test_bytes_le():
     assert str(UUID(bytes_le=expected.bytes_le)) == str(expected)
 
 
+@pytest.mark.xfail(raises=NotImplementedError)
 def test_fields():
     expected = uuid.uuid4()
 

@@ -160,6 +160,13 @@ fn fastuuid(py: Python, m: &PyModule) -> PyResult<()> {
         })
     }
 
+    #[pyfn(m, "uuid5")]
+    fn uuid5(namespace: &UUID, name: &PyBytes) -> PyResult<UUID> {
+        Ok(UUID {
+            handle: Uuid::new_v5(&namespace.handle, name.as_bytes()),
+        })
+    }
+
     #[pyfn(m, "uuid4_bulk")]
     fn uuid4_bulk(py: Python, n: usize) -> Vec<UUID> {
         py.allow_threads(|| {

@@ -1,10 +1,13 @@
 extern crate pyo3;
 extern crate uuid;
 
+use pyo3::class::basic::CompareOp;
 use pyo3::class::PyObjectProtocol;
-use pyo3::exceptions::{TypeError, ValueError, NotImplementedError};
+use pyo3::exceptions::{NotImplementedError, TypeError, ValueError};
 use pyo3::prelude::*;
-use pyo3::types::{PyBytes, PyInt, PyTuple};
+use pyo3::types::{PyAny, PyBytes, PyInt, PyTuple};
+use std::collections::hash_map::DefaultHasher;
+use std::hash::{Hash, Hasher};
 use std::iter;
 
 use uuid::Uuid;
@@ -106,6 +109,15 @@ fn fastuuid(py: Python, m: &PyModule) -> PyResult<()> {
         }
     }
 
+    impl<'p> FromPyObject<'p> for UUID {
+        fn extract(obj: &'p PyAny) -> PyResult<Self> {
+            let result: &UUID = obj.downcast_ref()?;
+            Ok(UUID {
+                handle: result.handle,
+            })
+        }
+    }
+
     #[pyproto]
     impl<'p> PyObjectProtocol<'p> for UUID {
         fn __str__(&self) -> PyResult<String> {
@@ -120,17 +132,29 @@ fn fastuuid(py: Python, m: &PyModule) -> PyResult<()> {
             let s = self.__str__()?;
             Ok(format!("UUID('{}')", s))
         }
+
+        fn __richcmp__(&self, other: UUID, op: CompareOp) -> PyResult<bool> {
+            match op {
+                CompareOp::Eq => Ok(self.handle == other.handle),
+                CompareOp::Ne => Ok(self.handle != other.handle),
+                CompareOp::Lt => Ok(self.handle < other.handle),
+                CompareOp::Gt => Ok(self.handle > other.handle),
+                CompareOp::Le => Ok(self.handle <= other.handle),
+                CompareOp::Ge => Ok(self.handle >= other.handle),
+            }
+        }
+
+        fn __hash__(&self) -> PyResult<isize> {
+            let mut s = DefaultHasher::new();
+            self.handle.hash(&mut s);
+            let result = s.finish() as isize;
+
+            Ok(result)
+        }
     }
 
     #[pyfn(m, "uuid3")]
-    fn uuid3(namespace: PyObject, name: &PyBytes, py: Python) -> PyResult<UUID> {
-        // TODO: Figure out why this segfaults
-        let namespace = if let Ok(n) = <UUID as PyTryFrom>::try_from(namespace.as_ref(py)) {
-            n
-        } else {
-            return Err(PyErr::new::<TypeError, &str>("Expected a UUID object"));
-        };
-
+    fn uuid3(namespace: &UUID, name: &PyBytes) -> PyResult<UUID> {
         Ok(UUID {
             handle: Uuid::new_v3(&namespace.handle, name.as_bytes()),
         })

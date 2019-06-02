@@ -42,6 +42,27 @@ def test_bytes_le():
     assert str(UUID(bytes_le=expected.bytes_le)) == str(expected)
 
 
+def test_equality():
+    expected = uuid4()
+    actual = UUID(str(expected))
+    other = uuid4()
+
+    assert expected == actual
+    assert expected != other
+
+
+def test_comparision():
+    a = UUID(int=10)
+    b = UUID(int=20)
+    c = UUID(int=20)
+
+    assert a < b
+    assert b > a
+    assert a <= b
+    assert b >= a
+    assert c <= c
+    assert c >= c
+
 @pytest.mark.xfail(raises=NotImplementedError)
 def test_fields():
     expected = uuid.uuid4()
@@ -49,5 +70,6 @@ def test_fields():
     assert str(UUID(fields=expected.fields)) == str(expected)
 
 
-# def test_uuid3():
-#     assert UUID_REGEX.match(str(uuid3(uuid4(), "foo")))
+def test_uuid3():
+    expected = uuid3(uuid4(), b"foo")
+    assert UUID_REGEX.match(str(expected))

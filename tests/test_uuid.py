@@ -1,7 +1,10 @@
 import re
-from fastuuid import uuid3, uuid4, uuid5, UUID
 import uuid
+
 import pytest
+from fastuuid import UUID, uuid3, uuid4, uuid5
+from hypothesis import given
+from hypothesis.strategies import uuids
 
 UUID_REGEX = re.compile("[0-F]{8}-([0-F]{4}-){3}[0-F]{12}", re.I)
 
@@ -12,8 +15,9 @@ def test_uuid_without_arguments():
         UUID()
 
 
-def test_hex():
-    expected = str(uuid.uuid4())
+@given(uuids())
+def test_hex(expected):
+    expected = str(expected)
 
     assert str(UUID(hex=expected)) == expected
 
@@ -24,21 +28,18 @@ def test_hex_bad_string():
         UUID("bla")
 
 
-def test_int():
-    expected = uuid.uuid4()
-
+@given(uuids())
+def test_int(expected):
     assert str(UUID(int=expected.int)) == str(expected)
 
 
-def test_bytes():
-    expected = uuid.uuid4()
-
+@given(uuids())
+def test_bytes(expected):
     assert str(UUID(bytes=expected.bytes)) == str(expected)
 
 
-def test_bytes_le():
-    expected = uuid.uuid4()
-
+@given(uuids())
+def test_bytes_le(expected):
     assert str(UUID(bytes_le=expected.bytes_le)) == str(expected)
 
 
@@ -63,31 +64,31 @@ def test_comparision():
     assert c <= c
     assert c >= c
 
-@pytest.mark.xfail(raises=NotImplementedError)
-def test_fields():
-    expected = uuid.uuid4()
 
+@pytest.mark.xfail(raises=NotImplementedError)
+@given(uuids())
+def test_fields(expected):
     assert str(UUID(fields=expected.fields)) == str(expected)
 
 
-def test_int_property():
-    u = uuid.uuid4()
+@given(uuids())
+def test_int_property(u):
     expected = u.int
     actual = UUID(str(u)).int
 
     assert expected == actual
 
 
-def test_bytes_property():
-    u = uuid.uuid4()
+@given(uuids())
+def test_bytes_property(u):
     expected = u.bytes
     actual = UUID(str(u)).bytes()
 
     assert expected == actual
 
 
-def test_bytes_le_property():
-    u = uuid.uuid4()
+@given(uuids())
+def test_bytes_le_property(u):
     expected = u.bytes_le
     actual = UUID(str(u)).bytes_le()
 
@@ -97,8 +98,16 @@ def test_bytes_le_property():
 def test_uuid3():
     expected = uuid3(uuid4(), b"foo")
     assert UUID_REGEX.match(str(expected))
+    assert str(expected) == str(uuid.UUID(str(expected)))
+
+
+def test_uuid4():
+    expected = uuid4()
+    assert UUID_REGEX.match(str(expected))
+    assert str(expected) == str(uuid.UUID(str(expected)))
 
 
 def test_uuid5():
     expected = uuid5(uuid4(), b"foo")
     assert UUID_REGEX.match(str(expected))
+    assert str(expected) == str(uuid.UUID(str(expected)))

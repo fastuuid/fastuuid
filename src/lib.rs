@@ -180,6 +180,17 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                 .handle
                 .get_version_num())
         }
+
+        #[getter]
+        fn variant(&self) -> PyResult<Option<&'static str>> {
+            Ok(match self.handle.get_variant() {
+                Some(Variant::NCS) => Some("reserved for NCS compatibility"),
+                Some(Variant::RFC4122) => Some("specified in RFC 4122"),
+                Some(Variant::Microsoft) => Some("reserved for Microsoft compatibility"),
+                Some(Variant::Future) => Some("reserved for future definition"),
+                _ => None
+            })
+        }
     }
 
     impl<'p> FromPyObject<'p> for UUID {

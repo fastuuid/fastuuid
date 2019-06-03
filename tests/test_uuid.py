@@ -120,6 +120,7 @@ def test_bytes_le_property(u):
 def test_uuid3():
     expected = uuid3(uuid4(), b"foo")
     assert expected.version == 3
+    assert expected.variant == "specified in RFC 4122"
     assert UUID_REGEX.match(str(expected))
     assert str(expected) == str(uuid.UUID(str(expected)))
 
@@ -127,6 +128,7 @@ def test_uuid3():
 def test_uuid4():
     expected = uuid4()
     assert expected.version == 4
+    assert expected.variant == "specified in RFC 4122"
     assert UUID_REGEX.match(str(expected))
     assert str(expected) == str(uuid.UUID(str(expected)))
 
@@ -134,5 +136,6 @@ def test_uuid4():
 def test_uuid5():
     expected = uuid5(uuid4(), b"foo")
     assert expected.version == 5
+    assert expected.variant == "specified in RFC 4122"
     assert UUID_REGEX.match(str(expected))
     assert str(expected) == str(uuid.UUID(str(expected)))

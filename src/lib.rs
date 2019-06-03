@@ -134,6 +134,15 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
             let b = PyBytes::new(py, b);
             Ok(b)
         }
+
+        #[getter]
+        fn hex(&self) -> PyResult<String> {
+            Ok(self
+                .handle
+                .to_simple()
+                .encode_lower(&mut Uuid::encode_buffer())
+                .to_string())
+        }
     }
 
     impl<'p> FromPyObject<'p> for UUID {

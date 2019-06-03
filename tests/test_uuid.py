@@ -88,6 +88,14 @@ def test_bytes_property(u):
 
 
 @given(uuids())
+def test_hex_property(u):
+    expected = u.hex
+    actual = UUID(str(u)).hex
+
+    assert expected == actual
+
+
+@given(uuids())
 def test_bytes_le_property(u):
     expected = u.bytes_le
     actual = UUID(str(u)).bytes_le()

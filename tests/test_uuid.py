@@ -70,6 +70,30 @@ def test_fields():
     assert str(UUID(fields=expected.fields)) == str(expected)
 
 
+def test_int_property():
+    u = uuid.uuid4()
+    expected = u.int
+    actual = UUID(str(u)).int
+
+    assert expected == actual
+
+
+def test_bytes_property():
+    u = uuid.uuid4()
+    expected = u.bytes
+    actual = UUID(str(u)).bytes()
+
+    assert expected == actual
+
+
+def test_bytes_le_property():
+    u = uuid.uuid4()
+    expected = u.bytes_le
+    actual = UUID(str(u)).bytes_le()
+
+    assert expected == actual
+
+
 def test_uuid3():
     expected = uuid3(uuid4(), b"foo")
     assert UUID_REGEX.match(str(expected))

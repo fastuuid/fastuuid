@@ -1,19 +1,20 @@
+extern crate byteorder;
 extern crate pyo3;
 extern crate uuid;
 
+use byteorder::ByteOrder;
 use pyo3::class::basic::CompareOp;
 use pyo3::class::PyObjectProtocol;
 use pyo3::exceptions::{NotImplementedError, TypeError, ValueError};
 use pyo3::prelude::*;
-use pyo3::types::{PyAny, PyBytes, PyInt, PyTuple};
+use pyo3::types::{PyAny, PyBytes, PyTuple};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::iter;
-
 use uuid::Uuid;
 
 #[pymodule]
-fn fastuuid(py: Python, m: &PyModule) -> PyResult<()> {
+fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
     #[pyclass]
     struct UUID {
         handle: Uuid,
@@ -106,6 +107,32 @@ fn fastuuid(py: Python, m: &PyModule) -> PyResult<()> {
                     Err(e)
                 }
             }
+        }
+
+        #[getter]
+        fn int(&self) -> PyResult<u128> {
+            Ok(byteorder::BigEndian::read_u128(self.handle.as_bytes()))
+        }
+
+        //#[getter]
+        // TODO: Figure out how to make this a property
+        fn bytes(&self, py: Python) -> PyResult<Py<PyBytes>> {
+            let b = PyBytes::new(py, self.handle.as_bytes().as_ref());
+            Ok(b)
+        }
+
+        //#[getter]
+        // TODO: Figure out how to make this a property
+        fn bytes_le(&self, py: Python) -> PyResult<Py<PyBytes>> {
+            // Must clone or an error occurs
+            let mut b = self.handle.as_bytes().clone();
+            // Convert big endian to little endian
+            b[0..4].reverse();
+            b[4..6].reverse();
+            b[6..8].reverse();
+            let b = b.as_ref();
+            let b = PyBytes::new(py, b);
+            Ok(b)
         }
     }
 

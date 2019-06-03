@@ -143,6 +143,15 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                 .encode_lower(&mut Uuid::encode_buffer())
                 .to_string())
         }
+
+        #[getter]
+        fn urn(&self) -> PyResult<String> {
+            Ok(self
+                .handle
+                .to_urn()
+                .encode_lower(&mut Uuid::encode_buffer())
+                .to_string())
+        }
     }
 
     impl<'p> FromPyObject<'p> for UUID {

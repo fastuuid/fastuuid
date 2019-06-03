@@ -11,7 +11,7 @@ use pyo3::types::{PyAny, PyBytes, PyTuple};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::iter;
-use uuid::{Uuid, Builder, Variant, Version};
+use uuid::{Builder, Uuid, Variant, Version};
 
 #[pymodule]
 fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
@@ -40,9 +40,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                 Some(4) => Ok(Some(Version::Random)),
                 Some(5) => Ok(Some(Version::Sha1)),
                 None => Ok(None),
-                _ => Err(PyErr::new::<ValueError, &str>(
-                    "illegal version number",
-                ))
+                _ => Err(PyErr::new::<ValueError, &str>("illegal version number")),
             }?;
 
             let result: PyResult<Uuid> = match (hex, bytes, bytes_le, fields, int) {
@@ -176,9 +174,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
 
         #[getter]
         fn version(&self) -> PyResult<usize> {
-            Ok(self
-                .handle
-                .get_version_num())
+            Ok(self.handle.get_version_num())
         }
 
         #[getter]
@@ -188,7 +184,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                 Some(Variant::RFC4122) => Some("specified in RFC 4122"),
                 Some(Variant::Microsoft) => Some("reserved for Microsoft compatibility"),
                 Some(Variant::Future) => Some("reserved for future definition"),
-                _ => None
+                _ => None,
             })
         }
     }

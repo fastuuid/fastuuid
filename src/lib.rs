@@ -11,7 +11,7 @@ use pyo3::types::{PyAny, PyBytes, PyTuple};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::iter;
-use uuid::Uuid;
+use uuid::{Uuid, Builder, Variant, Version};
 
 #[pymodule]
 fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
@@ -30,8 +30,21 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
             bytes_le: Option<Py<PyBytes>>,
             fields: Option<Py<PyTuple>>,
             int: Option<u128>,
+            version: Option<u8>,
             py: Python,
         ) -> PyResult<()> {
+            let version = match version {
+                Some(1) => Ok(Some(Version::Mac)),
+                Some(2) => Ok(Some(Version::Dce)),
+                Some(3) => Ok(Some(Version::Md5)),
+                Some(4) => Ok(Some(Version::Random)),
+                Some(5) => Ok(Some(Version::Sha1)),
+                None => Ok(None),
+                _ => Err(PyErr::new::<ValueError, &str>(
+                    "illegal version number",
+                ))
+            }?;
+
             let result: PyResult<Uuid> = match (hex, bytes, bytes_le, fields, int) {
                 (Some(hex), None, None, None, None) => {
                     if let Ok(uuid) = Uuid::parse_str(hex) {
@@ -50,7 +63,11 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                     let mut a: [u8; 16] = Default::default();
                     a.copy_from_slice(&b[0..16]);
 
-                    Ok(Uuid::from_bytes(a))
+                    let mut builder = Builder::from_bytes(a);
+                    if let Some(v) = version {
+                        builder.set_version(v);
+                    }
+                    Ok(builder.build())
                 }
                 (None, None, Some(bytes_le), None, None) => {
                     let b = bytes_le.to_object(py);
@@ -63,7 +80,11 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                     a[4..6].reverse();
                     a[6..8].reverse();
 
-                    Ok(Uuid::from_bytes(a))
+                    let mut builder = Builder::from_bytes(a);
+                    if let Some(v) = version {
+                        builder.set_version(v);
+                    }
+                    Ok(builder.build())
                 }
                 (None, None, None, Some(fields), None) => {
                     Err(PyErr::new::<NotImplementedError, &str>("Not implemented"))
@@ -151,6 +172,13 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                 .to_urn()
                 .encode_lower(&mut Uuid::encode_buffer())
                 .to_string())
+        }
+
+        #[getter]
+        fn version(&self) -> PyResult<usize> {
+            Ok(self
+                .handle
+                .get_version_num())
         }
     }
 

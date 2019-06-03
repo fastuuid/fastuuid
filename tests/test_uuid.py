@@ -28,6 +28,12 @@ def test_hex_bad_string():
         UUID("bla")
 
 
+def test_bad_version():
+    with pytest.raises(ValueError,
+                       match="illegal version number"):
+        UUID("bla", version=10)
+
+
 @given(uuids())
 def test_int(expected):
     assert str(UUID(int=expected.int)) == str(expected)
@@ -113,17 +119,20 @@ def test_bytes_le_property(u):
 
 def test_uuid3():
     expected = uuid3(uuid4(), b"foo")
+    assert expected.version == 3
     assert UUID_REGEX.match(str(expected))
     assert str(expected) == str(uuid.UUID(str(expected)))
 
 
 def test_uuid4():
     expected = uuid4()
+    assert expected.version == 4
     assert UUID_REGEX.match(str(expected))
     assert str(expected) == str(uuid.UUID(str(expected)))
 
 
 def test_uuid5():
     expected = uuid5(uuid4(), b"foo")
+    assert expected.version == 5
     assert UUID_REGEX.match(str(expected))
     assert str(expected) == str(uuid.UUID(str(expected)))

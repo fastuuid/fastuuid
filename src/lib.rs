@@ -5,9 +5,9 @@ extern crate uuid;
 use byteorder::ByteOrder;
 use pyo3::class::basic::CompareOp;
 use pyo3::class::{PyNumberProtocol, PyObjectProtocol};
-use pyo3::exceptions::{NotImplementedError, TypeError, ValueError};
+use pyo3::exceptions::{TypeError, ValueError};
 use pyo3::prelude::*;
-use pyo3::types::{PyAny, PyBytes, PyTuple};
+use pyo3::types::{PyAny, PyBytes, PyInt, PyTuple};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::iter;
@@ -45,7 +45,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                         handle: Uuid::nil(),
                     });
                     Err(PyErr::new::<ValueError, &str>("illegal version number"))
-                },
+                }
             }?;
 
             let result: PyResult<Uuid> = match (hex, bytes, bytes_le, fields, int) {
@@ -106,29 +106,88 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                     let f = f.cast_as::<PyTuple>(py)?;
                     if f.len() != 6 {
                         Err(PyErr::new::<ValueError, &str>("fields is not a 6-tuple"))
+                    } else {
+                        let time_low = match f.get_item(0).downcast_ref::<PyInt>()?.extract::<u32>()
+                        {
+                            Ok(time_low) => Ok(time_low as u128),
+                            Err(_) => Err(PyErr::new::<ValueError, &str>(
+                                "field 1 out of range (need a 32-bit value)",
+                            )),
+                        };
+
+                        if let Err(e) = time_low {
+                            return Err(e);
+                        }
+                        let time_low = time_low.unwrap();
+
+                        let time_mid = match f.get_item(1).downcast_ref::<PyInt>()?.extract::<u16>()
+                        {
+                            Ok(time_mid) => Ok(time_mid as u128),
+                            Err(_) => Err(PyErr::new::<ValueError, &str>(
+                                "field 2 out of range (need a 16-bit value)",
+                            )),
+                        };
+
+                        if let Err(e) = time_mid {
+                            return Err(e);
+                        }
+                        let time_mid = time_mid.unwrap();
+
+                        let time_high_version =
+                            match f.get_item(2).downcast_ref::<PyInt>()?.extract::<u16>() {
+                                Ok(time_high_version) => Ok(time_high_version as u128),
+                                Err(_) => Err(PyErr::new::<ValueError, &str>(
+                                    "field 3 out of range (need a 16-bit value)",
+                                )),
+                            };
+
+                        if let Err(e) = time_high_version {
+                            return Err(e);
+                        }
+                        let time_high_version = time_high_version.unwrap();
+
+                        let clock_seq_hi_variant =
+                            match f.get_item(3).downcast_ref::<PyInt>()?.extract::<u8>() {
+                                Ok(clock_seq_hi_variant) => Ok(clock_seq_hi_variant as u128),
+                                Err(_) => Err(PyErr::new::<ValueError, &str>(
+                                    "field 4 out of range (need a 8-bit value)",
+                                )),
+                            };
+
+                        if let Err(e) = clock_seq_hi_variant {
+                            return Err(e);
+                        };
+                        let clock_seq_hi_variant = clock_seq_hi_variant.unwrap();
+
+                        let clock_seq_low =
+                            match f.get_item(4).downcast_ref::<PyInt>()?.extract::<u8>() {
+                                Ok(clock_seq_low) => Ok(clock_seq_low as u128),
+                                Err(_) => Err(PyErr::new::<ValueError, &str>(
+                                    "field 5 out of range (need a 8-bit value)",
+                                )),
+                            };
+
+                        if let Err(e) = clock_seq_low {
+                            return Err(e);
+                        };
+                        let clock_seq_low = clock_seq_low.unwrap();
+
+                        let node = f.get_item(5).downcast_ref::<PyInt>()?.extract::<u128>()?;
+                        if node >= (1 << 48) {
+                            return Err(PyErr::new::<ValueError, &str>(
+                                "field 6 out of range (need a 48-bit value)",
+                            ));
+                        }
+
+                        let clock_seq = clock_seq_hi_variant.wrapping_shl(8) | clock_seq_low;
+                        let time_low = time_low.wrapping_shl(96);
+                        let time_mid = time_mid.wrapping_shl(80);
+                        let time_high_version = time_high_version.wrapping_shl(64);
+                        let clock_seq = clock_seq.wrapping_shl(48);
+                        let node = node;
+                        let int = time_low | time_mid | time_high_version | clock_seq | node;
+                        Ok(int.swap_bytes().into())
                     }
-                    else {
-                        Err(PyErr::new::<NotImplementedError, &str>("Not implemented"))
-                    }
-                    // TODO: Handle errors
-                    // TODO: Make this work
-                    // let d1: u32 = f.get_item(0).downcast_ref::<PyInt>()?.extract::<u32>()?;
-                    // let d2: u16 = f.get_item(1).downcast_ref::<PyInt>()?.extract::<u16>()?;
-                    // let d3: u16 = f.get_item(2).downcast_ref::<PyInt>()?.extract::<u16>()?;
-                    // let remaining_fields = f.split_from(3);
-                    // let remaining_fields = remaining_fields.to_object(py);
-                    // let remaining_fields = remaining_fields.cast_as::<PyTuple>(py)?;
-                    // let d4 = remaining_fields
-                    //     .iter()
-                    //     .map(|x| x.downcast_ref::<PyInt>().unwrap().extract::<u8>().unwrap())
-                    //     .collect::<Vec<u8>>();
-                    //
-                    // if let Ok(uuid) = Uuid::from_fields(d1, d2, d3, d4.as_slice()) {
-                    //     Ok(uuid)
-                    // } else {
-                    //     // TODO: Provide more context to why the fields weren't parsed correctly.
-                    //     Err(PyErr::new::<ValueError, &str>("fields error"))
-                    // }
                 }
                 (None, None, None, None, Some(int)) => Ok(int.swap_bytes().into()),
                 _ => Err(PyErr::new::<TypeError, &str>(

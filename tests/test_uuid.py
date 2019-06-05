@@ -4,7 +4,7 @@ import uuid
 import pytest
 from fastuuid import UUID, uuid3, uuid4, uuid5
 from hypothesis import given
-from hypothesis.strategies import uuids, integers, text, binary, lists
+from hypothesis.strategies import uuids, integers, text, binary, lists, tuples
 
 UUID_REGEX = re.compile("[0-F]{8}-([0-F]{4}-){3}[0-F]{12}", re.I)
 
@@ -59,6 +59,78 @@ def test_wrong_fields_count(fields):
         UUID(fields=fields)
 
 
+@given(tuples(integers(min_value=1 << 32),
+              integers(min_value=0, max_value=1 << 16 - 1),
+              integers(min_value=0, max_value=1 << 16 - 1),
+              integers(min_value=0, max_value=1 << 8 - 1),
+              integers(min_value=0, max_value=1 << 8 - 1),
+              integers(min_value=0, max_value=1 << 48 - 1)))
+def test_fields_time_low_out_of_range(fields):
+    with pytest.raises(ValueError,
+                       match=r"field 1 out of range \(need a 32-bit value\)"):
+        UUID(fields=fields)
+
+
+@given(tuples(integers(min_value=0, max_value=1 << 32 - 1),
+              integers(min_value=1 << 16),
+              integers(min_value=0, max_value=1 << 16 - 1),
+              integers(min_value=0, max_value=1 << 8 - 1),
+              integers(min_value=0, max_value=1 << 8 - 1),
+              integers(min_value=0, max_value=1 << 48 - 1)))
+def test_fields_time_mid_out_of_range(fields):
+    with pytest.raises(ValueError,
+                       match=r"field 2 out of range \(need a 16-bit value\)"):
+        UUID(fields=fields)
+
+
+@given(tuples(integers(min_value=0, max_value=1 << 32 - 1),
+              integers(min_value=0, max_value=1 << 16 - 1),
+              integers(min_value=1 << 16),
+              integers(min_value=0, max_value=1 << 8 - 1),
+              integers(min_value=0, max_value=1 << 8 - 1),
+              integers(min_value=0, max_value=1 << 48 - 1)))
+def test_fields_time_high_version_out_of_range(fields):
+    with pytest.raises(ValueError,
+                       match=r"field 3 out of range \(need a 16-bit value\)"):
+        UUID(fields=fields)
+
+
+@given(tuples(integers(min_value=0, max_value=1 << 32 - 1),
+              integers(min_value=0, max_value=1 << 16 - 1),
+              integers(min_value=0, max_value=1 << 16 - 1),
+              integers(min_value=1 << 8),
+              integers(min_value=0, max_value=1 << 8 - 1),
+              integers(min_value=0, max_value=1 << 48 - 1)))
+def test_fields_clock_seq_hi_variant_out_of_range(fields):
+    with pytest.raises(ValueError,
+                       match=r"field 4 out of range \(need a 8-bit value\)"):
+        UUID(fields=fields)
+
+
+@given(tuples(integers(min_value=0, max_value=1 << 32 - 1),
+              integers(min_value=0, max_value=1 << 16 - 1),
+              integers(min_value=0, max_value=1 << 16 - 1),
+              integers(min_value=0, max_value=1 << 8 - 1),
+              integers(min_value=1 << 8),
+              integers(min_value=0, max_value=1 << 48 - 1)))
+def test_fields_clock_seq_low_out_of_range(fields):
+    with pytest.raises(ValueError,
+                       match=r"field 5 out of range \(need a 8-bit value\)"):
+        UUID(fields=fields)
+
+
+@given(tuples(integers(min_value=0, max_value=1 << 32 - 1),
+              integers(min_value=0, max_value=1 << 16 - 1),
+              integers(min_value=0, max_value=1 << 16 - 1),
+              integers(min_value=0, max_value=1 << 8 - 1),
+              integers(min_value=0, max_value=1 << 8 - 1),
+              integers(min_value=1 << 48)))
+def test_fields_node_out_of_range(fields):
+    with pytest.raises(ValueError,
+                       match=r"field 6 out of range \(need a 48-bit value\)"):
+        UUID(fields=fields)
+
+
 @given(uuids())
 def test_int(expected):
     actual = UUID(int=expected.int)
@@ -98,7 +170,6 @@ def test_comparision():
     assert c >= c
 
 
-@pytest.mark.xfail(raises=NotImplementedError)
 @given(uuids())
 def test_fields(expected):
     assert str(UUID(fields=expected.fields)) == str(expected)

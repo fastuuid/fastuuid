@@ -210,20 +210,20 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
         }
 
         #[getter]
-        fn int(&self) -> PyResult<u128> {
-            Ok(byteorder::BigEndian::read_u128(self.handle.as_bytes()))
+        fn int(&self) -> u128 {
+            byteorder::BigEndian::read_u128(self.handle.as_bytes())
         }
 
         //#[getter]
         // TODO: Figure out how to make this a property
-        fn bytes(&self, py: Python) -> PyResult<Py<PyBytes>> {
+        fn bytes(&self, py: Python) -> PyObject {
             let b = PyBytes::new(py, self.handle.as_bytes().as_ref());
-            Ok(b)
+            b.to_object(py)
         }
 
         //#[getter]
         // TODO: Figure out how to make this a property
-        fn bytes_le(&self, py: Python) -> PyResult<Py<PyBytes>> {
+        fn bytes_le(&self, py: Python) -> PyObject {
             // Must clone or an error occurs
             let mut b = self.handle.as_bytes().clone();
             // Convert big endian to little endian
@@ -232,95 +232,95 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
             b[6..8].reverse();
             let b = b.as_ref();
             let b = PyBytes::new(py, b);
-            Ok(b)
+            b.to_object(py)
         }
 
         #[getter]
-        fn hex(&self) -> PyResult<String> {
-            Ok(self
+        fn hex(&self) -> String {
+            self
                 .handle
                 .to_simple()
                 .encode_lower(&mut Uuid::encode_buffer())
-                .to_string())
+                .to_string()
         }
 
         #[getter]
-        fn urn(&self) -> PyResult<String> {
-            Ok(self
+        fn urn(&self) -> String {
+            self
                 .handle
                 .to_urn()
                 .encode_lower(&mut Uuid::encode_buffer())
-                .to_string())
+                .to_string()
         }
 
         #[getter]
-        fn version(&self) -> PyResult<usize> {
-            Ok(self.handle.get_version_num())
+        fn version(&self) -> usize {
+            self.handle.get_version_num()
         }
 
         #[getter]
-        fn variant(&self) -> PyResult<Option<&'static str>> {
-            Ok(match self.handle.get_variant() {
+        fn variant(&self) -> Option<&'static str> {
+            match self.handle.get_variant() {
                 Some(Variant::NCS) => Some("reserved for NCS compatibility"),
                 Some(Variant::RFC4122) => Some("specified in RFC 4122"),
                 Some(Variant::Microsoft) => Some("reserved for Microsoft compatibility"),
                 Some(Variant::Future) => Some("reserved for future definition"),
                 _ => None,
-            })
+            }
         }
 
         #[getter]
-        fn fields(&self) -> PyResult<(u32, u16, u16, u8, u8, u64)> {
-            Ok((
-                self.time_low()?,
-                self.time_mid()?,
-                self.time_hi_version()?,
-                self.clock_seq_hi_variant()?,
-                self.clock_seq_low()?,
-                self.node()?,
-            ))
+        fn fields(&self) -> (u32, u16, u16, u8, u8, u64) {
+            (
+                self.time_low(),
+                self.time_mid(),
+                self.time_hi_version(),
+                self.clock_seq_hi_variant(),
+                self.clock_seq_low(),
+                self.node(),
+            )
         }
 
         #[getter]
-        fn time_low(&self) -> PyResult<u32> {
-            let int = self.int()?;
-            Ok(int.wrapping_shr(96) as u32)
+        fn time_low(&self) -> u32 {
+            let int = self.int();
+            int.wrapping_shr(96) as u32
         }
 
         #[getter]
-        fn time_mid(&self) -> PyResult<u16> {
-            let int = self.int()?;
-            Ok((int.wrapping_shr(80) & 0xffff) as u16)
+        fn time_mid(&self) -> u16 {
+            let int = self.int();
+            (int.wrapping_shr(80) & 0xffff) as u16
         }
 
         #[getter]
-        fn time_hi_version(&self) -> PyResult<u16> {
-            let int = self.int()?;
-            Ok((int.wrapping_shr(64) & 0xffff) as u16)
+        fn time_hi_version(&self) -> u16 {
+            let int = self.int();
+            (int.wrapping_shr(64) & 0xffff) as u16
         }
 
         #[getter]
-        fn clock_seq_hi_variant(&self) -> PyResult<u8> {
-            let int = self.int()?;
-            Ok((int.wrapping_shr(56) & 0xff) as u8)
+        fn clock_seq_hi_variant(&self) -> u8 {
+            let int = self.int();
+            (int.wrapping_shr(56) & 0xff) as u8
         }
 
         #[getter]
-        fn clock_seq_low(&self) -> PyResult<u8> {
-            let int = self.int()?;
-            Ok((int.wrapping_shr(48) & 0xff) as u8)
+        fn clock_seq_low(&self) -> u8 {
+            let int = self.int();
+            (int.wrapping_shr(48) & 0xff) as u8
         }
 
         //#[getter]
         // TODO: Figure out how to make this a property
         fn time(&self, py: Python) -> PyResult<PyObject> {
             // We use Python's API since the result is much larger than u128.
-            let time_hi_version = self.time_hi_version()?.to_object(py);
+            let time_hi_version = self.time_hi_version().to_object(py);
             let time_hi_version = time_hi_version.call_method(py, "__and__", (0x0fff,), None)?;
             let time_hi_version = time_hi_version.call_method(py, "__lshift__", (48,), None)?;
-            let time_mid = self.time_mid()?.to_object(py);
+            let time_mid = self.time_mid().to_object(py);
             let time_mid = time_mid.call_method(py, "__lshift__", (32,), None)?;
-            let time_low = self.time_low()?.to_object(py);
+            let time_low = self.time_low().to_object(py);
             let time = time_hi_version;
             let time = time.call_method(py, "__or__", (time_mid,), None)?;
             let time = time.call_method(py, "__or__", (time_low,), None)?;
@@ -328,8 +328,8 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
         }
 
         #[getter]
-        fn node(&self) -> PyResult<u64> {
-            Ok((self.int()? & 0xffffffffffff) as u64)
+        fn node(&self) -> u64 {
+            (self.int() & 0xffffffffffff) as u64
         }
     }
 
@@ -380,7 +380,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
     #[pyproto]
     impl<'p> PyNumberProtocol<'p> for UUID {
         fn __int__(&self) -> PyResult<u128> {
-            self.int()
+            Ok(self.int())
         }
     }
 

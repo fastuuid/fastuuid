@@ -15,7 +15,7 @@ matrix:
       script:
         - sudo docker build -t fastuuid_manylinux:lastest .
         - sudo docker run -v $PWD:/tmp/src fastuuid_manylinux:lastest
-    stage: wheels
+      stage: wheels
 cache:
   pip: true
   directories:

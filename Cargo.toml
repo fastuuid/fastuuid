@@ -2,6 +2,7 @@
 name = "fastuuid"
 version = "0.1.0"
 authors = ["Omer Katz <omer.drow@gmail.com>"]
+license = "BSD3"
 
 [lib]
 name = "fastuuid"

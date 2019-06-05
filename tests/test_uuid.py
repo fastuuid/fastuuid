@@ -186,7 +186,7 @@ def test_int_property(u):
 @given(uuids())
 def test_bytes_property(u):
     expected = u.bytes
-    actual = UUID(str(u)).bytes()
+    actual = UUID(str(u)).bytes
 
     assert expected == actual
 
@@ -210,7 +210,7 @@ def test_urn_property(u):
 @given(uuids())
 def test_bytes_le_property(u):
     expected = u.bytes_le
-    actual = UUID(str(u)).bytes_le()
+    actual = UUID(str(u)).bytes_le
 
     assert expected == actual
 
@@ -266,7 +266,7 @@ def test_clock_seq_low_property(u):
 @given(uuids())
 def test_time_property(u):
     expected = u.time
-    actual = UUID(str(u)).time()
+    actual = UUID(str(u)).time
 
     assert expected == actual
 

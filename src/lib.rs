@@ -214,16 +214,18 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
             byteorder::BigEndian::read_u128(self.handle.as_bytes())
         }
 
-        //#[getter]
-        // TODO: Figure out how to make this a property
-        fn bytes(&self, py: Python) -> PyObject {
+        #[getter]
+        fn bytes(&self) -> PyObject {
+            let gil = Python::acquire_gil();
+            let py = gil.python();
             let b = PyBytes::new(py, self.handle.as_bytes().as_ref());
             b.to_object(py)
         }
 
-        //#[getter]
-        // TODO: Figure out how to make this a property
-        fn bytes_le(&self, py: Python) -> PyObject {
+        #[getter]
+        fn bytes_le(&self) -> PyObject {
+            let gil = Python::acquire_gil();
+            let py = gil.python();
             // Must clone or an error occurs
             let mut b = self.handle.as_bytes().clone();
             // Convert big endian to little endian
@@ -311,9 +313,11 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
             (int.wrapping_shr(48) & 0xff) as u8
         }
 
-        //#[getter]
-        // TODO: Figure out how to make this a property
-        fn time(&self, py: Python) -> PyResult<PyObject> {
+        #[getter]
+        fn time(&self) -> PyResult<PyObject> {
+            let gil = Python::acquire_gil();
+    let py = gil.python();
+
             // We use Python's API since the result is much larger than u128.
             let time_hi_version = self.time_hi_version().to_object(py);
             let time_hi_version = time_hi_version.call_method(py, "__and__", (0x0fff,), None)?;

@@ -12,6 +12,8 @@ env:
 matrix:
   include:
     - python: '3.7'
+      before_install: true
+      install: true
       script:
         - sudo docker build -t fastuuid_manylinux:lastest .
         - sudo docker run -v $PWD:/tmp/src fastuuid_manylinux:lastest

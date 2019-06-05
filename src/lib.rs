@@ -15,7 +15,7 @@ use uuid::{Builder, Uuid, Variant, Version};
 
 #[pymodule]
 fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
-    #[pyclass]
+    #[pyclass(freelist=1000)]
     struct UUID {
         handle: Uuid,
     }

@@ -4,7 +4,7 @@ import uuid
 import pytest
 from fastuuid import UUID, uuid3, uuid4, uuid5
 from hypothesis import given
-from hypothesis.strategies import uuids
+from hypothesis.strategies import uuids, integers, text, binary
 
 UUID_REGEX = re.compile("[0-F]{8}-([0-F]{4}-){3}[0-F]{12}", re.I)
 
@@ -22,16 +22,33 @@ def test_hex(expected):
     assert str(UUID(hex=expected)) == expected
 
 
-def test_hex_bad_string():
+@given(text())
+def test_hex_bad_string(bad_hex):
     with pytest.raises(ValueError,
                        match="badly formed hexadecimal UUID string"):
-        UUID("bla")
+        UUID(bad_hex)
 
 
-def test_bad_version():
+@given(binary().filter(lambda x: len(x) != 16))
+def test_bad_bytes(bad_bytes):
+    with pytest.raises(ValueError,
+                       match="bytes is not a 16-char string"):
+        UUID(bytes=bad_bytes)
+
+
+@given(binary().filter(lambda x: len(x) != 16))
+def test_bad_bytes_le(bad_bytes):
+    with pytest.raises(ValueError,
+                       match="bytes is not a 16-char string"):
+        UUID(bytes_le=bad_bytes)
+
+
+@given(expected=uuids(),
+       bad_version=integers(min_value=5, max_value=20))
+def test_bad_version(expected, bad_version):
     with pytest.raises(ValueError,
                        match="illegal version number"):
-        UUID("bla", version=10)
+        UUID(str(expected), version=10)
 
 
 @given(uuids())

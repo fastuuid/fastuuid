@@ -57,32 +57,44 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                 (None, Some(bytes), None, None, None) => {
                     let b = bytes.to_object(py);
                     let b = b.cast_as::<PyBytes>(py)?;
-                    let b = b.as_bytes();
-                    let mut a: [u8; 16] = Default::default();
-                    a.copy_from_slice(&b[0..16]);
+                    if b.len()? != 16 {
+                        Err(PyErr::new::<ValueError, &str>(
+                            "bytes is not a 16-char string",
+                        ))
+                    } else {
+                        let b = b.as_bytes();
+                        let mut a: [u8; 16] = Default::default();
+                        a.copy_from_slice(&b[0..16]);
 
-                    let mut builder = Builder::from_bytes(a);
-                    if let Some(v) = version {
-                        builder.set_version(v);
+                        let mut builder = Builder::from_bytes(a);
+                        if let Some(v) = version {
+                            builder.set_version(v);
+                        }
+                        Ok(builder.build())
                     }
-                    Ok(builder.build())
                 }
                 (None, None, Some(bytes_le), None, None) => {
                     let b = bytes_le.to_object(py);
                     let b = b.cast_as::<PyBytes>(py)?;
-                    let b = b.as_bytes();
-                    let mut a: [u8; 16] = Default::default();
-                    a.copy_from_slice(&b[0..16]);
-                    // Convert little endian to big endian
-                    a[0..4].reverse();
-                    a[4..6].reverse();
-                    a[6..8].reverse();
+                    if b.len()? != 16 {
+                        Err(PyErr::new::<ValueError, &str>(
+                            "bytes is not a 16-char string",
+                        ))
+                    } else {
+                        let b = b.as_bytes();
+                        let mut a: [u8; 16] = Default::default();
+                        a.copy_from_slice(&b[0..16]);
+                        // Convert little endian to big endian
+                        a[0..4].reverse();
+                        a[4..6].reverse();
+                        a[6..8].reverse();
 
-                    let mut builder = Builder::from_bytes(a);
-                    if let Some(v) = version {
-                        builder.set_version(v);
+                        let mut builder = Builder::from_bytes(a);
+                        if let Some(v) = version {
+                            builder.set_version(v);
+                        }
+                        Ok(builder.build())
                     }
-                    Ok(builder.build())
                 }
                 (None, None, None, Some(fields), None) => {
                     Err(PyErr::new::<NotImplementedError, &str>("Not implemented"))

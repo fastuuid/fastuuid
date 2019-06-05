@@ -4,7 +4,7 @@ import uuid
 import pytest
 from fastuuid import UUID, uuid3, uuid4, uuid5
 from hypothesis import given
-from hypothesis.strategies import uuids, integers, text, binary
+from hypothesis.strategies import uuids, integers, text, binary, lists
 
 UUID_REGEX = re.compile("[0-F]{8}-([0-F]{4}-){3}[0-F]{12}", re.I)
 
@@ -49,6 +49,14 @@ def test_bad_version(expected, bad_version):
     with pytest.raises(ValueError,
                        match="illegal version number"):
         UUID(str(expected), version=10)
+
+
+@given(lists(integers(), max_size=10).filter(lambda x: len(x) != 6))
+def test_wrong_fields_count(fields):
+    fields = tuple(fields)
+    with pytest.raises(ValueError,
+                       match="fields is not a 6-tuple"):
+        UUID(fields=fields)
 
 
 @given(uuids())

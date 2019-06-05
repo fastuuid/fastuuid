@@ -102,11 +102,16 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                     }
                 }
                 (None, None, None, Some(fields), None) => {
-                    Err(PyErr::new::<NotImplementedError, &str>("Not implemented"))
+                    let f = fields.to_object(py);
+                    let f = f.cast_as::<PyTuple>(py)?;
+                    if f.len() != 6 {
+                        Err(PyErr::new::<ValueError, &str>("fields is not a 6-tuple"))
+                    }
+                    else {
+                        Err(PyErr::new::<NotImplementedError, &str>("Not implemented"))
+                    }
                     // TODO: Handle errors
                     // TODO: Make this work
-                    // let f = fields.to_object(py);
-                    // let f = f.cast_as::<PyTuple>(py)?;
                     // let d1: u32 = f.get_item(0).downcast_ref::<PyInt>()?.extract::<u32>()?;
                     // let d2: u16 = f.get_item(1).downcast_ref::<PyInt>()?.extract::<u16>()?;
                     // let d3: u16 = f.get_item(2).downcast_ref::<PyInt>()?.extract::<u16>()?;

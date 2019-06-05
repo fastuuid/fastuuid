@@ -215,6 +215,62 @@ def test_bytes_le_property(u):
     assert expected == actual
 
 
+@given(uuids())
+def test_time_low_property(u):
+    expected = u.time_low
+    actual = UUID(str(u)).time_low
+
+    assert expected == actual
+
+
+@given(uuids())
+def test_time_mid_property(u):
+    expected = u.time_mid
+    actual = UUID(str(u)).time_mid
+
+    assert expected == actual
+
+
+@given(uuids())
+def test_time_hi_version_property(u):
+    expected = u.time_hi_version
+    actual = UUID(str(u)).time_hi_version
+
+    assert expected == actual
+
+
+@given(uuids())
+def test_clock_seq_hi_variant_property(u):
+    expected = u.clock_seq_hi_variant
+    actual = UUID(str(u)).clock_seq_hi_variant
+
+    assert expected == actual
+
+
+@given(uuids())
+def test_clock_seq_low_property(u):
+    expected = u.clock_seq_low
+    actual = UUID(str(u)).clock_seq_low
+
+    assert expected == actual
+
+
+@given(uuids())
+def test_time_property(u):
+    expected = u.time
+    actual = UUID(str(u)).time
+
+    assert expected == actual
+
+
+@given(uuids())
+def test_node_property(u):
+    expected = u.node
+    actual = UUID(str(u)).node
+
+    assert expected == actual
+
+
 def test_uuid3():
     expected = uuid3(uuid4(), b"foo")
     assert expected.version == 3

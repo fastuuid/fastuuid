@@ -268,6 +268,53 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                 _ => None,
             })
         }
+
+        #[getter]
+        fn time_low(&self) -> PyResult<u32> {
+            let int = self.int()?;
+            Ok(int.wrapping_shr(96) as u32)
+        }
+
+        #[getter]
+        fn time_mid(&self) -> PyResult<u16> {
+            let int = self.int()?;
+            Ok((int.wrapping_shr(80) & 0xffff) as u16)
+        }
+
+        #[getter]
+        fn time_hi_version(&self) -> PyResult<u16> {
+            let int = self.int()?;
+            Ok((int.wrapping_shr(64) & 0xffff) as u16)
+        }
+
+        #[getter]
+        fn clock_seq_hi_variant(&self) -> PyResult<u8> {
+            let int = self.int()?;
+            Ok((int.wrapping_shr(56) & 0xff) as u8)
+        }
+
+        #[getter]
+        fn clock_seq_low(&self) -> PyResult<u8> {
+            let int = self.int()?;
+            Ok((int.wrapping_shr(48) & 0xff) as u8)
+        }
+
+        #[getter]
+        fn time(&self) -> PyResult<u128> {
+            let time_hi_version = (self.time_hi_version()? & 0x0fff).wrapping_shl(48);
+            let time_hi_version = time_hi_version as u128;
+            let time_mid = self.time_mid()?.wrapping_shl(32);
+            let time_mid = time_mid as u128;
+            let time_low = self.time_low()?;
+            let time_low = time_low as u128;
+            let time = time_hi_version | time_mid | time_low;
+            Ok(time)
+        }
+
+        #[getter]
+        fn node(&self) -> PyResult<u64>{
+            Ok((self.int()? & 0xffffffffffff) as u64)
+        }
     }
 
     impl<'p> FromPyObject<'p> for UUID {

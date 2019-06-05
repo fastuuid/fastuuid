@@ -216,6 +216,14 @@ def test_bytes_le_property(u):
 
 
 @given(uuids())
+def test_fields_property(u):
+    expected = u.fields
+    actual = UUID(str(u)).fields
+
+    assert expected == actual
+
+
+@given(uuids())
 def test_time_low_property(u):
     expected = u.time_low
     actual = UUID(str(u)).time_low

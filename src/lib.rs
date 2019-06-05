@@ -270,6 +270,18 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
         }
 
         #[getter]
+        fn fields(&self) -> PyResult<(u32, u16, u16, u8, u8, u64)> {
+            Ok((
+                self.time_low()?,
+                self.time_mid()?,
+                self.time_hi_version()?,
+                self.clock_seq_hi_variant()?,
+                self.clock_seq_low()?,
+                self.node()?,
+            ))
+        }
+
+        #[getter]
         fn time_low(&self) -> PyResult<u32> {
             let int = self.int()?;
             Ok(int.wrapping_shr(96) as u32)
@@ -312,7 +324,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
         }
 
         #[getter]
-        fn node(&self) -> PyResult<u64>{
+        fn node(&self) -> PyResult<u64> {
             Ok((self.int()? & 0xffffffffffff) as u64)
         }
     }

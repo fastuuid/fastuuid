@@ -1,11 +1,67 @@
 from concurrent.futures import ThreadPoolExecutor
-from uuid import uuid3, uuid4, uuid5
+from uuid import UUID, uuid3, uuid4, uuid5
 
 import pytest
+from fastuuid import UUID as FastUUID
 from fastuuid import uuid3 as fastuuid3
 from fastuuid import uuid4 as fastuuid4
 from fastuuid import uuid4_bulk
 from fastuuid import uuid5 as fastuuid5
+
+
+@pytest.fixture(scope="session")
+def example():
+    return uuid4()
+
+
+@pytest.mark.benchmark(group='parse-hex')
+def test_parse_hex_uuid(benchmark, example):
+    benchmark(UUID, hex=str(example))
+
+
+@pytest.mark.benchmark(group='parse-hex')
+def test_parse_hex_fastuuid(benchmark, example):
+    benchmark(FastUUID, hex=str(example))
+
+
+@pytest.mark.benchmark(group='parse-bytes')
+def test_parse_bytes_uuid(benchmark, example):
+    benchmark(UUID, bytes=example.bytes)
+
+
+@pytest.mark.benchmark(group='parse-bytes')
+def test_parse_bytes_fastuuid(benchmark, example):
+    benchmark(FastUUID, bytes=example.bytes)
+
+
+@pytest.mark.benchmark(group='parse-bytes_le')
+def test_parse_bytes_le_uuid(benchmark, example):
+    benchmark(UUID, bytes_le=example.bytes_le)
+
+
+@pytest.mark.benchmark(group='parse-bytes_le')
+def test_parse_bytes_le_fastuuid(benchmark, example):
+    benchmark(FastUUID, bytes_le=example.bytes_le)
+
+
+@pytest.mark.benchmark(group='parse-fields')
+def test_parse_fields_uuid(benchmark, example):
+    benchmark(UUID, fields=example.fields)
+
+
+@pytest.mark.benchmark(group='parse-fields')
+def test_parse_fields_fastuuid(benchmark, example):
+    benchmark(FastUUID, fields=example.fields)
+
+
+@pytest.mark.benchmark(group='parse-int')
+def test_parse_int_uuid(benchmark, example):
+    benchmark(UUID, int=example.int)
+
+
+@pytest.mark.benchmark(group='parse-int')
+def test_parse_int_fastuuid(benchmark, example):
+    benchmark(FastUUID, int=example.int)
 
 
 @pytest.mark.benchmark(group='uuidv3')

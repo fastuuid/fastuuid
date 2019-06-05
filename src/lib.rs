@@ -40,7 +40,12 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                 Some(4) => Ok(Some(Version::Random)),
                 Some(5) => Ok(Some(Version::Sha1)),
                 None => Ok(None),
-                _ => Err(PyErr::new::<ValueError, &str>("illegal version number")),
+                _ => {
+                    obj.init(UUID {
+                        handle: Uuid::nil(),
+                    });
+                    Err(PyErr::new::<ValueError, &str>("illegal version number"))
+                },
             }?;
 
             let result: PyResult<Uuid> = match (hex, bytes, bytes_le, fields, int) {

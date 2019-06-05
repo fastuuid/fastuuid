@@ -311,15 +311,19 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
             Ok((int.wrapping_shr(48) & 0xff) as u8)
         }
 
-        #[getter]
-        fn time(&self) -> PyResult<u128> {
-            let time_hi_version = (self.time_hi_version()? & 0x0fff).wrapping_shl(48);
-            let time_hi_version = time_hi_version as u128;
-            let time_mid = self.time_mid()?.wrapping_shl(32);
-            let time_mid = time_mid as u128;
-            let time_low = self.time_low()?;
-            let time_low = time_low as u128;
-            let time = time_hi_version | time_mid | time_low;
+        //#[getter]
+        // TODO: Figure out how to make this a property
+        fn time(&self, py: Python) -> PyResult<PyObject> {
+            // We use Python's API since the result is much larger than u128.
+            let time_hi_version = self.time_hi_version()?.to_object(py);
+            let time_hi_version = time_hi_version.call_method(py, "__and__", (0x0fff,), None)?;
+            let time_hi_version = time_hi_version.call_method(py, "__lshift__", (48,), None)?;
+            let time_mid = self.time_mid()?.to_object(py);
+            let time_mid = time_mid.call_method(py, "__lshift__", (32,), None)?;
+            let time_low = self.time_low()?.to_object(py);
+            let time = time_hi_version;
+            let time = time.call_method(py, "__or__", (time_mid,), None)?;
+            let time = time.call_method(py, "__or__", (time_low,), None)?;
             Ok(time)
         }
 

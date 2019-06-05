@@ -266,7 +266,7 @@ def test_clock_seq_low_property(u):
 @given(uuids())
 def test_time_property(u):
     expected = u.time
-    actual = UUID(str(u)).time
+    actual = UUID(str(u)).time()
 
     assert expected == actual
 

@@ -4,7 +4,7 @@ extern crate uuid;
 
 use byteorder::ByteOrder;
 use pyo3::class::basic::CompareOp;
-use pyo3::class::PyObjectProtocol;
+use pyo3::class::{PyNumberProtocol, PyObjectProtocol};
 use pyo3::exceptions::{NotImplementedError, TypeError, ValueError};
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyBytes, PyTuple};
@@ -230,6 +230,13 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
             let result = s.finish() as isize;
 
             Ok(result)
+        }
+    }
+
+    #[pyproto]
+    impl<'p> PyNumberProtocol<'p> for UUID {
+        fn __int__(&self) -> PyResult<u128> {
+            self.int()
         }
     }
 

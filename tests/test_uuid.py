@@ -36,7 +36,9 @@ def test_bad_version():
 
 @given(uuids())
 def test_int(expected):
-    assert str(UUID(int=expected.int)) == str(expected)
+    actual = UUID(int=expected.int)
+    assert str(actual) == str(expected)
+    assert int(actual) == int(expected)
 
 
 @given(uuids())

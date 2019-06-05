@@ -17,6 +17,6 @@ before_install:
   - rustup install nightly
   - rustup default nightly
 
-install: pip install -U tox tox-pyo3 tox-travis
+install: pip install -U tox pyo3-pack tox-pyo3 tox-travis
 
 script: tox

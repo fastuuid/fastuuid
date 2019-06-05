@@ -4,8 +4,18 @@ python:
 - '3.5'
 - '3.6'
 - '3.7'
+stages:
+  - test
+  - wheels
 env:
   - PATH=$HOME/.cargo/bin:$PATH
+matrix:
+  include:
+    - python: '3.7'
+      script:
+        - sudo docker build -t fastuuid_manylinux:lastest .
+        - sudo docker run -v $PWD:/tmp/src fastuuid_manylinux:lastest
+    stage: wheels
 cache:
   pip: true
   directories:

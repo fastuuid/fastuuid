@@ -11,7 +11,7 @@ use pyo3::types::{PyAny, PyBytes, PyInt, PyTuple};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::iter;
-use uuid::{Builder, Uuid, Variant, Version, Bytes};
+use uuid::{Builder, Bytes, Uuid, Variant, Version};
 
 #[pymodule]
 fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
@@ -196,7 +196,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                     let mut bytes: Bytes = Default::default();
                     byteorder::BigEndian::write_u128(&mut bytes[..], int);
                     Ok(Uuid::from_bytes(bytes))
-                },
+                }
                 _ => Err(PyErr::new::<TypeError, &str>(
                     "one of the hex, bytes, bytes_le, fields, or int arguments must be given",
                 )),

@@ -39,7 +39,7 @@ def test_bad_bytes(bad_bytes):
 @given(binary().filter(lambda x: len(x) != 16))
 def test_bad_bytes_le(bad_bytes):
     with pytest.raises(ValueError,
-                       match="bytes is not a 16-char string"):
+                       match="bytes_le is not a 16-char string"):
         UUID(bytes_le=bad_bytes)
 
 

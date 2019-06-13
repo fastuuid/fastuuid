@@ -15,7 +15,7 @@ use uuid::{Builder, Uuid, Variant, Version};
 
 #[pymodule]
 fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
-    #[pyclass(freelist=1000)]
+    #[pyclass(freelist = 1000)]
     struct UUID {
         handle: Uuid,
     }
@@ -62,20 +62,21 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                 (None, Some(bytes), None, None, None) => {
                     let b = bytes.to_object(py);
                     let b = b.cast_as::<PyBytes>(py)?;
-                    if b.len()? != 16 {
-                        Err(PyErr::new::<ValueError, &str>(
-                            "bytes is not a 16-char string",
-                        ))
-                    } else {
-                        let b = b.as_bytes();
-                        let mut a: [u8; 16] = Default::default();
-                        a.copy_from_slice(&b[0..16]);
 
-                        let mut builder = Builder::from_bytes(a);
-                        if let Some(v) = version {
-                            builder.set_version(v);
+                    let b = b.as_bytes();
+
+                    let builder = Builder::from_slice(b);
+
+                    match builder {
+                        Ok(mut builder) => {
+                            if let Some(v) = version {
+                                builder.set_version(v);
+                            }
+                            Ok(builder.build())
                         }
-                        Ok(builder.build())
+                        Err(_) => Err(PyErr::new::<ValueError, &str>(
+                            "bytes is not a 16-char string",
+                        )),
                     }
                 }
                 (None, None, Some(bytes_le), None, None) => {
@@ -83,7 +84,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                     let b = b.cast_as::<PyBytes>(py)?;
                     if b.len()? != 16 {
                         Err(PyErr::new::<ValueError, &str>(
-                            "bytes is not a 16-char string",
+                            "bytes_le is not a 16-char string",
                         ))
                     } else {
                         let b = b.as_bytes();
@@ -239,8 +240,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
 
         #[getter]
         fn hex(&self) -> String {
-            self
-                .handle
+            self.handle
                 .to_simple()
                 .encode_lower(&mut Uuid::encode_buffer())
                 .to_string()
@@ -248,8 +248,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
 
         #[getter]
         fn urn(&self) -> String {
-            self
-                .handle
+            self.handle
                 .to_urn()
                 .encode_lower(&mut Uuid::encode_buffer())
                 .to_string()
@@ -316,7 +315,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
         #[getter]
         fn time(&self) -> PyResult<PyObject> {
             let gil = Python::acquire_gil();
-    let py = gil.python();
+            let py = gil.python();
 
             // We use Python's API since the result is much larger than u128.
             let time_hi_version = self.time_hi_version().to_object(py);

@@ -40,9 +40,7 @@ cache:
     - $TRAVIS_BUILD_DIR/target
 
 before_install:
-  - curl https://sh.rustup.rs -sSf | sh -s -- -y
-  - rustup install nightly
-  - rustup default nightly
+  - curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly
 
 install: pip install -U tox pyo3-pack tox-pyo3 tox-travis
 

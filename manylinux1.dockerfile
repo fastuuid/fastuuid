@@ -1,6 +1,6 @@
 FROM quay.io/pypa/manylinux1_x86_64:latest
 
-RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly
 ENV PATH /root/.cargo/bin:$PATH
 RUN /opt/python/cp37-cp37m/bin/pip install pyo3-pack
 

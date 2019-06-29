@@ -42,7 +42,7 @@ before_cache:
   - sudo rm -R $TRAVIS_BUILD_DIR/target/wheels
 
 before_install:
-  - curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly
+  - curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain nightly
 
 install: pip install -U tox pyo3-pack tox-pyo3 tox-travis
 

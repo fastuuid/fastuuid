@@ -110,7 +110,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                     } else {
                         let time_low = match f.get_item(0).downcast_ref::<PyInt>()?.extract::<u32>()
                         {
-                            Ok(time_low) => Ok(time_low as u128),
+                            Ok(time_low) => Ok(u128::from(time_low)),
                             Err(_) => Err(PyErr::new::<ValueError, &str>(
                                 "field 1 out of range (need a 32-bit value)",
                             )),
@@ -123,7 +123,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
 
                         let time_mid = match f.get_item(1).downcast_ref::<PyInt>()?.extract::<u16>()
                         {
-                            Ok(time_mid) => Ok(time_mid as u128),
+                            Ok(time_mid) => Ok(u128::from(time_mid)),
                             Err(_) => Err(PyErr::new::<ValueError, &str>(
                                 "field 2 out of range (need a 16-bit value)",
                             )),
@@ -136,7 +136,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
 
                         let time_high_version =
                             match f.get_item(2).downcast_ref::<PyInt>()?.extract::<u16>() {
-                                Ok(time_high_version) => Ok(time_high_version as u128),
+                                Ok(time_high_version) => Ok(u128::from(time_high_version)),
                                 Err(_) => Err(PyErr::new::<ValueError, &str>(
                                     "field 3 out of range (need a 16-bit value)",
                                 )),
@@ -149,7 +149,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
 
                         let clock_seq_hi_variant =
                             match f.get_item(3).downcast_ref::<PyInt>()?.extract::<u8>() {
-                                Ok(clock_seq_hi_variant) => Ok(clock_seq_hi_variant as u128),
+                                Ok(clock_seq_hi_variant) => Ok(u128::from(clock_seq_hi_variant)),
                                 Err(_) => Err(PyErr::new::<ValueError, &str>(
                                     "field 4 out of range (need a 8-bit value)",
                                 )),
@@ -162,7 +162,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
 
                         let clock_seq_low =
                             match f.get_item(4).downcast_ref::<PyInt>()?.extract::<u8>() {
-                                Ok(clock_seq_low) => Ok(clock_seq_low as u128),
+                                Ok(clock_seq_low) => Ok(u128::from(clock_seq_low)),
                                 Err(_) => Err(PyErr::new::<ValueError, &str>(
                                     "field 5 out of range (need a 8-bit value)",
                                 )),
@@ -204,7 +204,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
 
             match result {
                 Ok(handle) => {
-                    obj.init(UUID { handle: handle });
+                    obj.init(UUID { handle });
                     Ok(())
                 }
                 Err(e) => {

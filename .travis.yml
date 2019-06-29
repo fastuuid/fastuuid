@@ -1,9 +1,9 @@
 language: python
 dist: xenial
 python:
-- '3.5'
-- '3.6'
-- '3.7'
+  - '3.5'
+  - '3.6'
+  - '3.7'
 stages:
   - test
   - lint
@@ -14,10 +14,7 @@ matrix:
   include:
     - python: '3.7'
       name: 'rust linters'
-      before_install:
-        - curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain nightly
-        - rustup component add clippy rustfmt
-      install: true
+      install: rustup component add clippy rustfmt
       script:
         - cargo clippy
         - cargo fmt -- --check

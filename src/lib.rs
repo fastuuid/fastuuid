@@ -233,8 +233,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
         fn bytes_le(&self) -> PyObject {
             let gil = Python::acquire_gil();
             let py = gil.python();
-            // Must clone or an error occurs
-            let mut b = self.handle.as_bytes().clone();
+            let mut b = *self.handle.as_bytes();
             // Convert big endian to little endian
             b[0..4].reverse();
             b[4..6].reverse();

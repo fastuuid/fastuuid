@@ -19,3 +19,23 @@ features = ["v1", "v3", "v4", "v5"]
 
 [dependencies.byteorder]
 version = "*"
+
+[package.metadata.pyo3-pack]
+classifier = [
+  "Development Status :: 4 - Beta",
+  "License :: OSI Approved :: BSD License",
+  "Programming Language :: Rust",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.5",
+  "Programming Language :: Python :: 3.6",
+  "Programming Language :: Python :: 3.7",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Topic :: Software Development :: Libraries",
+  "Topic :: Software Development :: Libraries :: Python Modules"
+]
+maintainer = "Omer Katz"
+maintainer-email = "omer.drow@gmail.com"
+requires-python = ">=3.5"
+project-url = ["https://github.com/thedrow/fastuuid/"]

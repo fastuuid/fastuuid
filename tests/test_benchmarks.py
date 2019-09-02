@@ -5,7 +5,7 @@ import pytest
 from fastuuid import UUID as FastUUID
 from fastuuid import uuid3 as fastuuid3
 from fastuuid import uuid4 as fastuuid4
-from fastuuid import uuid4_bulk
+from fastuuid import uuid4_bulk, uuid4_as_strings_bulk
 from fastuuid import uuid5 as fastuuid5
 
 
@@ -121,4 +121,44 @@ def test_fast_uuidv4_bulk_threads(benchmark):
         pool = ThreadPoolExecutor(max_workers=8)
         for _ in range(8):
             pool.submit(uuid4_bulk, 1000)
+        pool.shutdown(wait=True)
+
+
+@pytest.mark.benchmark(group='uuidv4 8 threads - strings')
+def test_uuidv4_str_threads(benchmark):
+    @benchmark
+    def b():
+        pool = ThreadPoolExecutor(max_workers=8)
+        for _ in range(8):
+            pool.submit(lambda: [str(uuid4()) for _ in range(1000)])
+        pool.shutdown(wait=True)
+
+
+@pytest.mark.benchmark(group='uuidv4 8 threads - strings')
+def test_fast_uuidv4_str_threads(benchmark):
+    @benchmark
+    def b():
+        pool = ThreadPoolExecutor(max_workers=8)
+        for _ in range(8):
+            pool.submit(lambda: [str(fastuuid4()) for _ in range(1000)])
+        pool.shutdown(wait=True)
+
+
+@pytest.mark.benchmark(group='uuidv4 8 threads - strings')
+def test_fast_uuidv4_bulk_convert_to_strings_threads(benchmark):
+    @benchmark
+    def b():
+        pool = ThreadPoolExecutor(max_workers=8)
+        for _ in range(8):
+            pool.submit(lambda: map(str, uuid4_bulk(1000)))
+        pool.shutdown(wait=True)
+
+
+@pytest.mark.benchmark(group='uuidv4 8 threads - strings')
+def test_fast_uuidv4_as_strings_bulk_threads(benchmark):
+    @benchmark
+    def b():
+        pool = ThreadPoolExecutor(max_workers=8)
+        for _ in range(8):
+            pool.submit(uuid4_as_strings_bulk, 1000)
         pool.shutdown(wait=True)

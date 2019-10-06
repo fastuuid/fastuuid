@@ -20,11 +20,11 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
         handle: Uuid,
     }
 
-    #[allow(clippy::new_ret_no_self)]
-    #[allow(clippy::too_many_arguments)]
     #[pymethods]
     impl UUID {
         #[new]
+        #[allow(clippy::new_ret_no_self)]
+        #[allow(clippy::too_many_arguments)]
         fn new(
             obj: &PyRawObject,
             hex: Option<&str>,

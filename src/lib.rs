@@ -1,8 +1,6 @@
-extern crate byteorder;
 extern crate pyo3;
 extern crate uuid;
 
-use byteorder::ByteOrder;
 use pyo3::class::basic::CompareOp;
 use pyo3::class::{PyNumberProtocol, PyObjectProtocol};
 use pyo3::exceptions::{TypeError, ValueError};
@@ -11,7 +9,7 @@ use pyo3::types::{PyAny, PyBytes, PyInt, PyTuple};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::iter;
-use uuid::{Builder, Bytes, Uuid, Variant, Version};
+use uuid::{Builder, Uuid, Variant, Version};
 
 #[pymodule]
 fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
@@ -189,16 +187,10 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                         let clock_seq = clock_seq.wrapping_shl(48);
                         let node = node;
                         let int = time_low | time_mid | time_high_version | clock_seq | node;
-                        let mut bytes: Bytes = Default::default();
-                        byteorder::BigEndian::write_u128(&mut bytes[..], int);
-                        Ok(Uuid::from_bytes(bytes))
+                        Ok(Uuid::from_u128(int))
                     }
                 }
-                (None, None, None, None, Some(int)) => {
-                    let mut bytes: Bytes = Default::default();
-                    byteorder::BigEndian::write_u128(&mut bytes[..], int);
-                    Ok(Uuid::from_bytes(bytes))
-                }
+                (None, None, None, None, Some(int)) => Ok(Uuid::from_u128(int)),
                 _ => Err(PyErr::new::<TypeError, &str>(
                     "one of the hex, bytes, bytes_le, fields, or int arguments must be given",
                 )),
@@ -220,7 +212,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
 
         #[getter]
         fn int(&self) -> u128 {
-            byteorder::BigEndian::read_u128(self.handle.as_bytes())
+            self.handle.as_u128()
         }
 
         #[getter]

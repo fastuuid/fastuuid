@@ -17,9 +17,6 @@ features = ["extension-module"]
 version = "0.8.1"
 features = ["v1", "v3", "v4", "v5"]
 
-[dependencies.byteorder]
-version = "*"
-
 [package.metadata.pyo3-pack]
 classifier = [
   "Development Status :: 4 - Beta",

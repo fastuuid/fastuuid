@@ -4,6 +4,7 @@ python:
   - '3.5'
   - '3.6'
   - '3.7'
+  - '3.8'
 stages:
   - test
   - lint
@@ -12,14 +13,14 @@ env:
   - PATH=$HOME/.cargo/bin:$PATH
 matrix:
   include:
-    - python: '3.7'
+    - python: '3.8'
       name: 'rust linters'
       install: rustup component add clippy rustfmt
       script:
         - cargo clippy
         - cargo fmt -- --check
       stage: lint
-    - python: '3.7'
+    - python: '3.8'
       name: 'manylinux2010'
       before_install: true
       install: true
@@ -30,7 +31,7 @@ matrix:
         - sudo docker build -f manylinux2010.dockerfile -t fastuuid_manylinux2010:latest .
         - sudo docker run -e MANYLINUX_VERSION="2010" -e TRAVIS_TAG="$TRAVIS_TAG" -e PYPI_USERNAME="$PYPI_USERNAME" -e PYO3_PACK_PASSWORD="$PYO3_PACK_PASSWORD" -v $PWD:/tmp/src fastuuid_manylinux2010:latest
       stage: wheels
-    - python: '3.7'
+    - python: '3.8'
       name: 'manylinux1'
       before_install: true
       install: true

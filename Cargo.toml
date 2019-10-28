@@ -14,7 +14,7 @@ version = "0.8.2"
 features = ["extension-module"]
 
 [dependencies.uuid]
-version = "0.7.4"
+version = "0.8.1"
 features = ["v1", "v3", "v4", "v5"]
 
 [dependencies.byteorder]

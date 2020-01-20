@@ -15,7 +15,7 @@ matrix:
   include:
     - python: '3.8'
       name: 'rust linters'
-      install: rustup component add clippy rustfmt
+      install: true
       script:
         - cargo clippy
         - cargo fmt -- --check
@@ -52,7 +52,7 @@ before_cache:
   - sudo rm -R $TRAVIS_BUILD_DIR/target/wheels
 
 before_install:
-  - curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain nightly
+  - curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain nightly --component clippy rustfmt
 
 install: pip install -U tox pyo3-pack tox-pyo3 tox-travis
 

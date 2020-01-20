@@ -1,3 +1,4 @@
+#![deny(warnings)]
 extern crate pyo3;
 extern crate uuid;
 
@@ -239,18 +240,20 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
 
         #[getter]
         fn hex(&self) -> String {
-            self.handle
+            (*self
+                .handle
                 .to_simple()
-                .encode_lower(&mut Uuid::encode_buffer())
-                .to_string()
+                .encode_lower(&mut Uuid::encode_buffer()))
+            .to_string()
         }
 
         #[getter]
         fn urn(&self) -> String {
-            self.handle
+            (*self
+                .handle
                 .to_urn()
-                .encode_lower(&mut Uuid::encode_buffer())
-                .to_string()
+                .encode_lower(&mut Uuid::encode_buffer()))
+            .to_string()
         }
 
         #[getter]
@@ -347,11 +350,11 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
     #[pyproto]
     impl<'p> PyObjectProtocol<'p> for UUID {
         fn __str__(&self) -> PyResult<String> {
-            Ok(self
+            Ok((*self
                 .handle
                 .to_hyphenated()
-                .encode_lower(&mut Uuid::encode_buffer())
-                .to_string())
+                .encode_lower(&mut Uuid::encode_buffer()))
+            .to_string())
         }
 
         fn __repr__(&self) -> PyResult<String> {
@@ -415,10 +418,10 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
     fn uuid4_as_strings_bulk(py: Python, n: usize) -> Vec<String> {
         py.allow_threads(|| {
             iter::repeat_with(|| {
-                Uuid::new_v4()
+                (*Uuid::new_v4()
                     .to_simple()
-                    .encode_lower(&mut Uuid::encode_buffer())
-                    .to_string()
+                    .encode_lower(&mut Uuid::encode_buffer()))
+                .to_string()
             })
             .take(n)
             .collect()

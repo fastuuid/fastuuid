@@ -47,6 +47,7 @@ cache:
   directories:
     - $HOME/.cargo
     - $TRAVIS_BUILD_DIR/target
+    - $TRAVIS_BUILD_DIR/.hypothesis
 before_cache:
   - sudo rm -R $TRAVIS_BUILD_DIR/target/wheels
 

@@ -54,6 +54,6 @@ before_cache:
 before_install:
   - curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain nightly --component clippy rustfmt
 
-install: pip install -U tox pyo3-pack tox-pyo3 tox-travis
+install: pip install -U tox maturin tox-pyo3 tox-travis
 
 script: tox

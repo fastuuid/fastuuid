@@ -22,10 +22,8 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
     #[pymethods]
     impl UUID {
         #[new]
-        #[allow(clippy::new_ret_no_self)]
         #[allow(clippy::too_many_arguments)]
         fn new(
-            obj: &PyRawObject,
             hex: Option<&str>,
             bytes: Option<Py<PyBytes>>,
             bytes_le: Option<Py<PyBytes>>,
@@ -33,7 +31,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
             int: Option<u128>,
             version: Option<u8>,
             py: Python,
-        ) -> PyResult<()> {
+        ) -> Result<Self> {
             let version = match version {
                 Some(1) => Ok(Some(Version::Mac)),
                 Some(2) => Ok(Some(Version::Dce)),
@@ -42,10 +40,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                 Some(5) => Ok(Some(Version::Sha1)),
                 None => Ok(None),
                 _ => {
-                    obj.init(UUID {
-                        handle: Uuid::nil(),
-                    });
-                    Err(PyErr::new::<ValueError, &str>("illegal version number"))
+                    return Err(PyErr::new::<ValueError, &str>("illegal version number"))
                 }
             }?;
 
@@ -199,13 +194,9 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
 
             match result {
                 Ok(handle) => {
-                    obj.init(UUID { handle });
-                    Ok(())
+                    Ok(UUID { handle })
                 }
                 Err(e) => {
-                    obj.init(UUID {
-                        handle: Uuid::nil(),
-                    });
                     Err(e)
                 }
             }
@@ -340,7 +331,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
 
     impl<'p> FromPyObject<'p> for UUID {
         fn extract(obj: &'p PyAny) -> PyResult<Self> {
-            let result: &UUID = obj.downcast_ref()?;
+            let result: &UUID = obj.downcast()?;
             Ok(UUID {
                 handle: result.handle,
             })

@@ -6,7 +6,7 @@ use pyo3::class::basic::CompareOp;
 use pyo3::class::{PyNumberProtocol, PyObjectProtocol};
 use pyo3::exceptions::{TypeError, ValueError};
 use pyo3::prelude::*;
-use pyo3::types::{PyAny, PyBytes, PyInt, PyTuple};
+use pyo3::types::{PyBytes, PyInt, PyTuple};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::iter;
@@ -39,9 +39,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                 Some(4) => Ok(Some(Version::Random)),
                 Some(5) => Ok(Some(Version::Sha1)),
                 None => Ok(None),
-                _ => {
-                    Err(PyErr::new::<ValueError, &str>("illegal version number"))
-                }
+                _ => Err(PyErr::new::<ValueError, &str>("illegal version number")),
             }?;
 
             let result: PyResult<Uuid> = match (hex, bytes, bytes_le, fields, int) {
@@ -104,8 +102,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                     if f.len() != 6 {
                         Err(PyErr::new::<ValueError, &str>("fields is not a 6-tuple"))
                     } else {
-                        let time_low = match f.get_item(0).downcast::<PyInt>()?.extract::<u32>()
-                        {
+                        let time_low = match f.get_item(0).downcast::<PyInt>()?.extract::<u32>() {
                             Ok(time_low) => Ok(u128::from(time_low)),
                             Err(_) => Err(PyErr::new::<ValueError, &str>(
                                 "field 1 out of range (need a 32-bit value)",
@@ -117,8 +114,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                         }
                         let time_low = time_low.unwrap();
 
-                        let time_mid = match f.get_item(1).downcast::<PyInt>()?.extract::<u16>()
-                        {
+                        let time_mid = match f.get_item(1).downcast::<PyInt>()?.extract::<u16>() {
                             Ok(time_mid) => Ok(u128::from(time_mid)),
                             Err(_) => Err(PyErr::new::<ValueError, &str>(
                                 "field 2 out of range (need a 16-bit value)",
@@ -156,13 +152,13 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                         };
                         let clock_seq_hi_variant = clock_seq_hi_variant.unwrap();
 
-                        let clock_seq_low =
-                            match f.get_item(4).downcast::<PyInt>()?.extract::<u8>() {
-                                Ok(clock_seq_low) => Ok(u128::from(clock_seq_low)),
-                                Err(_) => Err(PyErr::new::<ValueError, &str>(
-                                    "field 5 out of range (need a 8-bit value)",
-                                )),
-                            };
+                        let clock_seq_low = match f.get_item(4).downcast::<PyInt>()?.extract::<u8>()
+                        {
+                            Ok(clock_seq_low) => Ok(u128::from(clock_seq_low)),
+                            Err(_) => Err(PyErr::new::<ValueError, &str>(
+                                "field 5 out of range (need a 8-bit value)",
+                            )),
+                        };
 
                         if let Err(e) = clock_seq_low {
                             return Err(e);
@@ -193,12 +189,8 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
             };
 
             match result {
-                Ok(handle) => {
-                    Ok(UUID { handle })
-                }
-                Err(e) => {
-                    Err(e)
-                }
+                Ok(handle) => Ok(UUID { handle }),
+                Err(e) => Err(e),
             }
         }
 
@@ -329,12 +321,11 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
         }
     }
 
-    impl<'p> FromPyObject<'p> for UUID {
-        fn extract(obj: &'p PyAny) -> PyResult<Self> {
-            let result: &UUID = obj.downcast()?;
-            Ok(UUID {
-                handle: result.handle,
-            })
+    impl Clone for UUID {
+        fn clone(&self) -> Self {
+            UUID {
+                handle: self.handle,
+            }
         }
     }
 

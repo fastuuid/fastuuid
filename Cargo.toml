@@ -1,6 +1,6 @@
 [package]
 name = "fastuuid"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Omer Katz <omer.drow@gmail.com>"]
 license = "BSD3"
 description = "Python bindings to Rust's UUID library."
@@ -10,7 +10,7 @@ name = "fastuuid"
 crate-type = ["cdylib"]
 
 [dependencies.pyo3]
-version = "0.8.5"
+version = "0.10.1"
 features = ["extension-module"]
 
 [dependencies.uuid]

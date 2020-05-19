@@ -6,7 +6,7 @@ use pyo3::class::basic::CompareOp;
 use pyo3::class::{PyNumberProtocol, PyObjectProtocol};
 use pyo3::exceptions::{TypeError, ValueError};
 use pyo3::prelude::*;
-use pyo3::types::{PyAny, PyBytes, PyInt, PyTuple};
+use pyo3::types::{PyBytes, PyInt, PyTuple};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::iter;
@@ -22,18 +22,16 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
     #[pymethods]
     impl UUID {
         #[new]
-        #[allow(clippy::new_ret_no_self)]
         #[allow(clippy::too_many_arguments)]
         fn new(
-            obj: &PyRawObject,
             hex: Option<&str>,
-            bytes: Option<Py<PyBytes>>,
-            bytes_le: Option<Py<PyBytes>>,
-            fields: Option<Py<PyTuple>>,
+            bytes: Option<&PyBytes>,
+            bytes_le: Option<&PyBytes>,
+            fields: Option<&PyTuple>,
             int: Option<u128>,
             version: Option<u8>,
             py: Python,
-        ) -> PyResult<()> {
+        ) -> PyResult<Self> {
             let version = match version {
                 Some(1) => Ok(Some(Version::Mac)),
                 Some(2) => Ok(Some(Version::Dce)),
@@ -41,12 +39,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                 Some(4) => Ok(Some(Version::Random)),
                 Some(5) => Ok(Some(Version::Sha1)),
                 None => Ok(None),
-                _ => {
-                    obj.init(UUID {
-                        handle: Uuid::nil(),
-                    });
-                    Err(PyErr::new::<ValueError, &str>("illegal version number"))
-                }
+                _ => Err(PyErr::new::<ValueError, &str>("illegal version number")),
             }?;
 
             let result: PyResult<Uuid> = match (hex, bytes, bytes_le, fields, int) {
@@ -109,8 +102,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                     if f.len() != 6 {
                         Err(PyErr::new::<ValueError, &str>("fields is not a 6-tuple"))
                     } else {
-                        let time_low = match f.get_item(0).downcast_ref::<PyInt>()?.extract::<u32>()
-                        {
+                        let time_low = match f.get_item(0).downcast::<PyInt>()?.extract::<u32>() {
                             Ok(time_low) => Ok(u128::from(time_low)),
                             Err(_) => Err(PyErr::new::<ValueError, &str>(
                                 "field 1 out of range (need a 32-bit value)",
@@ -122,8 +114,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                         }
                         let time_low = time_low.unwrap();
 
-                        let time_mid = match f.get_item(1).downcast_ref::<PyInt>()?.extract::<u16>()
-                        {
+                        let time_mid = match f.get_item(1).downcast::<PyInt>()?.extract::<u16>() {
                             Ok(time_mid) => Ok(u128::from(time_mid)),
                             Err(_) => Err(PyErr::new::<ValueError, &str>(
                                 "field 2 out of range (need a 16-bit value)",
@@ -136,7 +127,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                         let time_mid = time_mid.unwrap();
 
                         let time_high_version =
-                            match f.get_item(2).downcast_ref::<PyInt>()?.extract::<u16>() {
+                            match f.get_item(2).downcast::<PyInt>()?.extract::<u16>() {
                                 Ok(time_high_version) => Ok(u128::from(time_high_version)),
                                 Err(_) => Err(PyErr::new::<ValueError, &str>(
                                     "field 3 out of range (need a 16-bit value)",
@@ -149,7 +140,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                         let time_high_version = time_high_version.unwrap();
 
                         let clock_seq_hi_variant =
-                            match f.get_item(3).downcast_ref::<PyInt>()?.extract::<u8>() {
+                            match f.get_item(3).downcast::<PyInt>()?.extract::<u8>() {
                                 Ok(clock_seq_hi_variant) => Ok(u128::from(clock_seq_hi_variant)),
                                 Err(_) => Err(PyErr::new::<ValueError, &str>(
                                     "field 4 out of range (need a 8-bit value)",
@@ -161,20 +152,20 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                         };
                         let clock_seq_hi_variant = clock_seq_hi_variant.unwrap();
 
-                        let clock_seq_low =
-                            match f.get_item(4).downcast_ref::<PyInt>()?.extract::<u8>() {
-                                Ok(clock_seq_low) => Ok(u128::from(clock_seq_low)),
-                                Err(_) => Err(PyErr::new::<ValueError, &str>(
-                                    "field 5 out of range (need a 8-bit value)",
-                                )),
-                            };
+                        let clock_seq_low = match f.get_item(4).downcast::<PyInt>()?.extract::<u8>()
+                        {
+                            Ok(clock_seq_low) => Ok(u128::from(clock_seq_low)),
+                            Err(_) => Err(PyErr::new::<ValueError, &str>(
+                                "field 5 out of range (need a 8-bit value)",
+                            )),
+                        };
 
                         if let Err(e) = clock_seq_low {
                             return Err(e);
                         };
                         let clock_seq_low = clock_seq_low.unwrap();
 
-                        let node = f.get_item(5).downcast_ref::<PyInt>()?.extract::<u128>()?;
+                        let node = f.get_item(5).downcast::<PyInt>()?.extract::<u128>()?;
                         if node >= (1 << 48) {
                             return Err(PyErr::new::<ValueError, &str>(
                                 "field 6 out of range (need a 48-bit value)",
@@ -198,16 +189,8 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
             };
 
             match result {
-                Ok(handle) => {
-                    obj.init(UUID { handle });
-                    Ok(())
-                }
-                Err(e) => {
-                    obj.init(UUID {
-                        handle: Uuid::nil(),
-                    });
-                    Err(e)
-                }
+                Ok(handle) => Ok(UUID { handle }),
+                Err(e) => Err(e),
             }
         }
 
@@ -338,12 +321,11 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
         }
     }
 
-    impl<'p> FromPyObject<'p> for UUID {
-        fn extract(obj: &'p PyAny) -> PyResult<Self> {
-            let result: &UUID = obj.downcast_ref()?;
-            Ok(UUID {
-                handle: result.handle,
-            })
+    impl Clone for UUID {
+        fn clone(&self) -> Self {
+            UUID {
+                handle: self.handle,
+            }
         }
     }
 

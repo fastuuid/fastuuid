@@ -25,9 +25,9 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
         #[allow(clippy::too_many_arguments)]
         fn new(
             hex: Option<&str>,
-            bytes: Option<Py<PyBytes>>,
-            bytes_le: Option<Py<PyBytes>>,
-            fields: Option<Py<PyTuple>>,
+            bytes: Option<&PyBytes>,
+            bytes_le: Option<&PyBytes>,
+            fields: Option<&PyTuple>,
             int: Option<u128>,
             version: Option<u8>,
             py: Python,

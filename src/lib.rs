@@ -208,17 +208,13 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
         }
 
         #[getter]
-        fn bytes_le(&self) -> PyObject {
-            let gil = Python::acquire_gil();
-            let py = gil.python();
+        fn bytes_le<'py>(&self, py: Python<'py>) -> &'py PyBytes {
             let mut b = *self.handle.as_bytes();
             // Convert big endian to little endian
             b[0..4].reverse();
             b[4..6].reverse();
             b[6..8].reverse();
-            let b = b.as_ref();
-            let b = PyBytes::new(py, b);
-            b.to_object(py)
+            PyBytes::new(py, &b)
         }
 
         #[getter]
@@ -298,10 +294,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
         }
 
         #[getter]
-        fn time(&self) -> PyResult<PyObject> {
-            let gil = Python::acquire_gil();
-            let py = gil.python();
-
+        fn time(&self, py: Python) -> PyResult<PyObject> {
             // We use Python's API since the result is much larger than u128.
             let time_hi_version = self.time_hi_version().to_object(py);
             let time_hi_version = time_hi_version.call_method(py, "__and__", (0x0fff,), None)?;

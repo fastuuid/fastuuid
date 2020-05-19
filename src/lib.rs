@@ -31,7 +31,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
             int: Option<u128>,
             version: Option<u8>,
             py: Python,
-        ) -> Result<Self> {
+        ) -> PyResult<Self> {
             let version = match version {
                 Some(1) => Ok(Some(Version::Mac)),
                 Some(2) => Ok(Some(Version::Dce)),
@@ -40,7 +40,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                 Some(5) => Ok(Some(Version::Sha1)),
                 None => Ok(None),
                 _ => {
-                    return Err(PyErr::new::<ValueError, &str>("illegal version number"))
+                    Err(PyErr::new::<ValueError, &str>("illegal version number"))
                 }
             }?;
 
@@ -104,7 +104,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                     if f.len() != 6 {
                         Err(PyErr::new::<ValueError, &str>("fields is not a 6-tuple"))
                     } else {
-                        let time_low = match f.get_item(0).downcast_ref::<PyInt>()?.extract::<u32>()
+                        let time_low = match f.get_item(0).downcast::<PyInt>()?.extract::<u32>()
                         {
                             Ok(time_low) => Ok(u128::from(time_low)),
                             Err(_) => Err(PyErr::new::<ValueError, &str>(
@@ -117,7 +117,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                         }
                         let time_low = time_low.unwrap();
 
-                        let time_mid = match f.get_item(1).downcast_ref::<PyInt>()?.extract::<u16>()
+                        let time_mid = match f.get_item(1).downcast::<PyInt>()?.extract::<u16>()
                         {
                             Ok(time_mid) => Ok(u128::from(time_mid)),
                             Err(_) => Err(PyErr::new::<ValueError, &str>(
@@ -131,7 +131,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                         let time_mid = time_mid.unwrap();
 
                         let time_high_version =
-                            match f.get_item(2).downcast_ref::<PyInt>()?.extract::<u16>() {
+                            match f.get_item(2).downcast::<PyInt>()?.extract::<u16>() {
                                 Ok(time_high_version) => Ok(u128::from(time_high_version)),
                                 Err(_) => Err(PyErr::new::<ValueError, &str>(
                                     "field 3 out of range (need a 16-bit value)",
@@ -144,7 +144,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                         let time_high_version = time_high_version.unwrap();
 
                         let clock_seq_hi_variant =
-                            match f.get_item(3).downcast_ref::<PyInt>()?.extract::<u8>() {
+                            match f.get_item(3).downcast::<PyInt>()?.extract::<u8>() {
                                 Ok(clock_seq_hi_variant) => Ok(u128::from(clock_seq_hi_variant)),
                                 Err(_) => Err(PyErr::new::<ValueError, &str>(
                                     "field 4 out of range (need a 8-bit value)",
@@ -157,7 +157,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                         let clock_seq_hi_variant = clock_seq_hi_variant.unwrap();
 
                         let clock_seq_low =
-                            match f.get_item(4).downcast_ref::<PyInt>()?.extract::<u8>() {
+                            match f.get_item(4).downcast::<PyInt>()?.extract::<u8>() {
                                 Ok(clock_seq_low) => Ok(u128::from(clock_seq_low)),
                                 Err(_) => Err(PyErr::new::<ValueError, &str>(
                                     "field 5 out of range (need a 8-bit value)",
@@ -169,7 +169,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                         };
                         let clock_seq_low = clock_seq_low.unwrap();
 
-                        let node = f.get_item(5).downcast_ref::<PyInt>()?.extract::<u128>()?;
+                        let node = f.get_item(5).downcast::<PyInt>()?.extract::<u128>()?;
                         if node >= (1 << 48) {
                             return Err(PyErr::new::<ValueError, &str>(
                                 "field 6 out of range (need a 48-bit value)",

@@ -1,4 +1,4 @@
-FROM quay.io/pypa/manylinux2010_x86_64:latest
+FROM quay.io/pypa/manylinux2014_x86_64:latest
 
 RUN curl -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain nightly
 ENV PATH /root/.cargo/bin:$PATH

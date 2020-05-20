@@ -40,7 +40,7 @@ matrix:
         - secure: "Bgd5Gwf0VOi6iqQAfaZJ/kIp9idyIMOgi1CGMLwfuOqHXgIxtf4ukB5Z1ZMAlPdRGNTquI/iJeUHmb9bCjvkLPInR9A2bgU5VfhChVdV3Sav8ATvvUHTctP+m0izRv/1IfVyIngV9qnwFlVYxq8M+SK3JmrL0tHuPXpnToeCXHoPhE1VbcRh9PrQyKaS7pdizSH5xQMWcSkrKVKVtfrP1ujhPj30Braeo3oC/fcoO5G8qXHhKF/KxddicNt54nghc2Jq0zLxULhDpWO1KbfaMiCxt7PgoVAuRGGF2Pk5cNkZCDoyiE+mRNcs+OxsZQJnxwAtti3fQ6uAsoWRDoBahJiMcAkxvQUrZaa2bUY9BLTYBsnBH0V01844guGmbfOYpvcuUM8dYW32p/dPlImH858RLsWKLXyr76FayZTN1/S5iSOja1pb4JwMvK+JbXC77yzJvfkJWmzxxKswhrA21H67TwtkV+T4fGHfJtsyv1L93dRHpaRgRTtsbqin43TJKFKFRuyXow0y1uB8dvUTqYfHYkqKhRYnhoGoxMOC6owmmqRGKoUm8s2epkr4FY/JZqAe3SMow1dUMqmg6gNPwCjq+D7ErS82xCiXduhgRCYIZg7Rc5DNlR3iJAbZzKYFOfo9zyN9NAvN2xNq785DAgEIb2VRhjpgAq1YHUOrcII="
       script:
         - sudo docker build -f manylinux2014.dockerfile -t fastuuid_manylinux2014:latest .
-        - sudo docker run -e MANYLINUX_VERSION="1" -e TRAVIS_TAG="$TRAVIS_TAG" -e PYPI_USERNAME="$PYPI_USERNAME" -e MATURIN_PASSWORD="$PYO3_PACK_PASSWORD" -v $PWD:/tmp/src fastuuid_manylinux2014:latest
+        - sudo docker run -e SDIST=1 -e MANYLINUX_VERSION="1" -e TRAVIS_TAG="$TRAVIS_TAG" -e PYPI_USERNAME="$PYPI_USERNAME" -e MATURIN_PASSWORD="$PYO3_PACK_PASSWORD" -v $PWD:/tmp/src fastuuid_manylinux2014:latest
       stage: wheels
     - python: '3.8'
       name: 'manylinux1'

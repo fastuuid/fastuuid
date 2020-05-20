@@ -14,7 +14,9 @@ use uuid::{Builder, Uuid, Variant, Version};
 
 #[pymodule]
 fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
+
     #[pyclass(freelist = 1000)]
+    #[derive(Clone)]
     struct UUID {
         handle: Uuid,
     }
@@ -297,14 +299,6 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
         #[getter]
         fn node(&self) -> u64 {
             (self.int() & 0xffffffffffff) as u64
-        }
-    }
-
-    impl Clone for UUID {
-        fn clone(&self) -> Self {
-            UUID {
-                handle: self.handle,
-            }
         }
     }
 

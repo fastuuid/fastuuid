@@ -30,7 +30,6 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
             fields: Option<&PyTuple>,
             int: Option<u128>,
             version: Option<u8>,
-            py: Python,
         ) -> PyResult<Self> {
             let version = match version {
                 Some(1) => Ok(Some(Version::Mac)),
@@ -54,12 +53,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                     }
                 }
                 (None, Some(bytes), None, None, None) => {
-                    let b = bytes.to_object(py);
-                    let b = b.cast_as::<PyBytes>(py)?;
-
-                    let b = b.as_bytes();
-
-                    let builder = Builder::from_slice(b);
+                    let builder = Builder::from_slice(bytes.as_bytes());
 
                     match builder {
                         Ok(mut builder) => {
@@ -74,14 +68,12 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                     }
                 }
                 (None, None, Some(bytes_le), None, None) => {
-                    let b = bytes_le.to_object(py);
-                    let b = b.cast_as::<PyBytes>(py)?;
-                    if b.len()? != 16 {
+                    if bytes_le.len()? != 16 {
                         Err(PyErr::new::<ValueError, &str>(
                             "bytes_le is not a 16-char string",
                         ))
                     } else {
-                        let b = b.as_bytes();
+                        let b = bytes_le.as_bytes();
                         let mut a: [u8; 16] = Default::default();
                         a.copy_from_slice(&b[0..16]);
                         // Convert little endian to big endian
@@ -97,8 +89,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                     }
                 }
                 (None, None, None, Some(fields), None) => {
-                    let f = fields.to_object(py);
-                    let f = f.cast_as::<PyTuple>(py)?;
+                    let f = fields;
                     if f.len() != 6 {
                         Err(PyErr::new::<ValueError, &str>("fields is not a 6-tuple"))
                     } else {
@@ -200,11 +191,8 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
         }
 
         #[getter]
-        fn bytes(&self) -> PyObject {
-            let gil = Python::acquire_gil();
-            let py = gil.python();
-            let b = PyBytes::new(py, self.handle.as_bytes().as_ref());
-            b.to_object(py)
+        fn bytes(&self) -> &[u8] {
+            self.handle.as_bytes()
         }
 
         #[getter]
@@ -219,20 +207,18 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
 
         #[getter]
         fn hex(&self) -> String {
-            (*self
-                .handle
+            self.handle
                 .to_simple()
-                .encode_lower(&mut Uuid::encode_buffer()))
-            .to_string()
+                .encode_lower(&mut Uuid::encode_buffer())
+                .to_string()
         }
 
         #[getter]
         fn urn(&self) -> String {
-            (*self
-                .handle
+            self.handle
                 .to_urn()
-                .encode_lower(&mut Uuid::encode_buffer()))
-            .to_string()
+                .encode_lower(&mut Uuid::encode_buffer())
+                .to_string()
         }
 
         #[getter]
@@ -325,11 +311,11 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
     #[pyproto]
     impl<'p> PyObjectProtocol<'p> for UUID {
         fn __str__(&self) -> PyResult<String> {
-            Ok((*self
+            Ok(self
                 .handle
                 .to_hyphenated()
-                .encode_lower(&mut Uuid::encode_buffer()))
-            .to_string())
+                .encode_lower(&mut Uuid::encode_buffer())
+                .to_string())
         }
 
         fn __repr__(&self) -> PyResult<String> {

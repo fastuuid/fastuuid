@@ -2,8 +2,6 @@ FROM quay.io/pypa/manylinux2010_x86_64:latest
 
 RUN curl -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain nightly
 ENV PATH /root/.cargo/bin:$PATH
-RUN rustup install nightly
-RUN rustup default nightly
 RUN /opt/python/cp38-cp38/bin/pip install maturin
 
 RUN mkdir /tmp/src

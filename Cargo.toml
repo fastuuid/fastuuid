@@ -37,3 +37,8 @@ maintainer = "Omer Katz"
 maintainer-email = "omer.drow@gmail.com"
 requires-python = ">=3.5"
 project-url = ["https://github.com/thedrow/fastuuid/"]
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+opt-level = 3

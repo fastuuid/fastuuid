@@ -10,7 +10,7 @@ name = "fastuuid"
 crate-type = ["cdylib"]
 
 [dependencies.pyo3]
-version = "0.10.1"
+version = "0.11.0"
 features = ["extension-module"]
 
 [dependencies.uuid]

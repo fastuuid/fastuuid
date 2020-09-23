@@ -4,7 +4,7 @@ extern crate uuid;
 
 use pyo3::class::basic::CompareOp;
 use pyo3::class::{PyNumberProtocol, PyObjectProtocol};
-use pyo3::exceptions::{TypeError, ValueError};
+use pyo3::exceptions::{PyTypeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::{PyBytes, PyInt, PyTuple};
 use std::collections::hash_map::DefaultHasher;
@@ -40,7 +40,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                 Some(4) => Ok(Some(Version::Random)),
                 Some(5) => Ok(Some(Version::Sha1)),
                 None => Ok(None),
-                _ => Err(PyErr::new::<ValueError, &str>("illegal version number")),
+                _ => Err(PyErr::new::<PyValueError, &str>("illegal version number")),
             }?;
 
             let result: PyResult<Uuid> = match (hex, bytes, bytes_le, fields, int) {
@@ -49,7 +49,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                         Ok(uuid)
                     } else {
                         // TODO: Provide more context to why the string wasn't parsed correctly.
-                        Err(PyErr::new::<ValueError, &str>(
+                        Err(PyErr::new::<PyValueError, &str>(
                             "badly formed hexadecimal UUID string",
                         ))
                     }
@@ -64,14 +64,14 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                             }
                             Ok(builder.build())
                         }
-                        Err(_) => Err(PyErr::new::<ValueError, &str>(
+                        Err(_) => Err(PyErr::new::<PyValueError, &str>(
                             "bytes is not a 16-char string",
                         )),
                     }
                 }
                 (None, None, Some(bytes_le), None, None) => {
                     if bytes_le.len()? != 16 {
-                        Err(PyErr::new::<ValueError, &str>(
+                        Err(PyErr::new::<PyValueError, &str>(
                             "bytes_le is not a 16-char string",
                         ))
                     } else {
@@ -93,11 +93,11 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                 (None, None, None, Some(fields), None) => {
                     let f = fields;
                     if f.len() != 6 {
-                        Err(PyErr::new::<ValueError, &str>("fields is not a 6-tuple"))
+                        Err(PyErr::new::<PyValueError, &str>("fields is not a 6-tuple"))
                     } else {
                         let time_low = match f.get_item(0).downcast::<PyInt>()?.extract::<u32>() {
                             Ok(time_low) => Ok(u128::from(time_low)),
-                            Err(_) => Err(PyErr::new::<ValueError, &str>(
+                            Err(_) => Err(PyErr::new::<PyValueError, &str>(
                                 "field 1 out of range (need a 32-bit value)",
                             )),
                         };
@@ -109,7 +109,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
 
                         let time_mid = match f.get_item(1).downcast::<PyInt>()?.extract::<u16>() {
                             Ok(time_mid) => Ok(u128::from(time_mid)),
-                            Err(_) => Err(PyErr::new::<ValueError, &str>(
+                            Err(_) => Err(PyErr::new::<PyValueError, &str>(
                                 "field 2 out of range (need a 16-bit value)",
                             )),
                         };
@@ -122,7 +122,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                         let time_high_version =
                             match f.get_item(2).downcast::<PyInt>()?.extract::<u16>() {
                                 Ok(time_high_version) => Ok(u128::from(time_high_version)),
-                                Err(_) => Err(PyErr::new::<ValueError, &str>(
+                                Err(_) => Err(PyErr::new::<PyValueError, &str>(
                                     "field 3 out of range (need a 16-bit value)",
                                 )),
                             };
@@ -135,7 +135,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                         let clock_seq_hi_variant =
                             match f.get_item(3).downcast::<PyInt>()?.extract::<u8>() {
                                 Ok(clock_seq_hi_variant) => Ok(u128::from(clock_seq_hi_variant)),
-                                Err(_) => Err(PyErr::new::<ValueError, &str>(
+                                Err(_) => Err(PyErr::new::<PyValueError, &str>(
                                     "field 4 out of range (need a 8-bit value)",
                                 )),
                             };
@@ -148,7 +148,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                         let clock_seq_low = match f.get_item(4).downcast::<PyInt>()?.extract::<u8>()
                         {
                             Ok(clock_seq_low) => Ok(u128::from(clock_seq_low)),
-                            Err(_) => Err(PyErr::new::<ValueError, &str>(
+                            Err(_) => Err(PyErr::new::<PyValueError, &str>(
                                 "field 5 out of range (need a 8-bit value)",
                             )),
                         };
@@ -160,7 +160,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
 
                         let node = f.get_item(5).downcast::<PyInt>()?.extract::<u128>()?;
                         if node >= (1 << 48) {
-                            return Err(PyErr::new::<ValueError, &str>(
+                            return Err(PyErr::new::<PyValueError, &str>(
                                 "field 6 out of range (need a 48-bit value)",
                             ));
                         }
@@ -176,7 +176,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                     }
                 }
                 (None, None, None, None, Some(int)) => Ok(Uuid::from_u128(int)),
-                _ => Err(PyErr::new::<TypeError, &str>(
+                _ => Err(PyErr::new::<PyTypeError, &str>(
                     "one of the hex, bytes, bytes_le, fields, or int arguments must be given",
                 )),
             };

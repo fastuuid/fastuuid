@@ -2,9 +2,10 @@ import re
 import uuid
 
 import pytest
-from fastuuid import UUID, uuid3, uuid4, uuid5
 from hypothesis import given
 from hypothesis.strategies import binary, integers, lists, text, tuples, uuids
+
+from fastuuid import UUID, uuid3, uuid4, uuid5
 
 UUID_REGEX = re.compile("[0-F]{8}-([0-F]{4}-){3}[0-F]{12}", re.I)
 

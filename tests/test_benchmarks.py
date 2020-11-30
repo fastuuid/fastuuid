@@ -2,10 +2,11 @@ from concurrent.futures import ThreadPoolExecutor
 from uuid import UUID, uuid3, uuid4, uuid5
 
 import pytest
+
 from fastuuid import UUID as FastUUID
 from fastuuid import uuid3 as fastuuid3
 from fastuuid import uuid4 as fastuuid4
-from fastuuid import uuid4_bulk, uuid4_as_strings_bulk
+from fastuuid import uuid4_as_strings_bulk, uuid4_bulk
 from fastuuid import uuid5 as fastuuid5
 
 

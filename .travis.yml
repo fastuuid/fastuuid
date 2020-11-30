@@ -16,8 +16,8 @@ matrix:
       name: 'rust linters'
       install: true
       script:
-        - cargo clippy || true
-        - cargo fmt -- --check  || true
+        - cargo clippy
+        - cargo fmt -- --check
       stage: lint
     - python: '3.8'
       name: 'manylinux2010'

@@ -45,11 +45,11 @@ def test_bad_bytes_le(bad_bytes):
 
 
 @given(expected=uuids(),
-       bad_version=integers(min_value=5, max_value=20))
+       bad_version=integers(min_value=6, max_value=20))
 def test_bad_version(expected, bad_version):
     with pytest.raises(ValueError,
                        match="illegal version number"):
-        UUID(str(expected), version=10)
+        UUID(str(expected), version=bad_version)
 
 
 @given(lists(integers(), max_size=10).filter(lambda x: len(x) != 6))

@@ -344,17 +344,17 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
     }
 
     #[pyfn(m, "uuid3")]
-    fn uuid3(namespace: &UUID, name: &PyBytes) -> PyResult<UUID> {
-        Ok(UUID {
+    fn uuid3(namespace: &UUID, name: &PyBytes) -> UUID {
+        UUID {
             handle: Uuid::new_v3(&namespace.handle, name.as_bytes()),
-        })
+        }
     }
 
     #[pyfn(m, "uuid5")]
-    fn uuid5(namespace: &UUID, name: &PyBytes) -> PyResult<UUID> {
-        Ok(UUID {
+    fn uuid5(namespace: &UUID, name: &PyBytes) -> UUID {
+        UUID {
             handle: Uuid::new_v5(&namespace.handle, name.as_bytes()),
-        })
+        }
     }
 
     #[pyfn(m, "uuid4_bulk")]

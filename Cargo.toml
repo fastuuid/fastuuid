@@ -1,6 +1,6 @@
 [package]
 name = "fastuuid"
-version = "0.5.1"
+version = "0.5.2"
 authors = ["Omer Katz <omer.drow@gmail.com>"]
 license = "BSD3"
 description = "Python bindings to Rust's UUID library."

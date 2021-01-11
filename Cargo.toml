@@ -1,6 +1,6 @@
 [package]
 name = "fastuuid"
-version = "0.5.2"
+version = "0.6.0"
 authors = ["Omer Katz <omer.drow@gmail.com>"]
 license = "BSD3"
 description = "Python bindings to Rust's UUID library."
@@ -10,11 +10,11 @@ name = "fastuuid"
 crate-type = ["cdylib"]
 
 [dependencies.pyo3]
-version = "0.12.4"
+version = "0.13.1"
 features = ["extension-module"]
 
 [dependencies.uuid]
-version = "0.8.1"
+version = "0.8.2"
 features = ["v1", "v3", "v4", "v5"]
 
 [package.metadata.maturin]
@@ -25,18 +25,18 @@ classifier = [
   "Programming Language :: Python",
   "Programming Language :: Python :: 3 :: Only",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.5",
   "Programming Language :: Python :: 3.6",
   "Programming Language :: Python :: 3.7",
   "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: Implementation :: CPython",
   "Topic :: Software Development :: Libraries",
   "Topic :: Software Development :: Libraries :: Python Modules"
 ]
 maintainer = "Omer Katz"
 maintainer-email = "omer.drow@gmail.com"
-requires-python = ">=3.5"
-project-url = ["https://github.com/thedrow/fastuuid/"]
+requires-python = ">=3.6"
+project-url = { homepage = "https://github.com/thedrow/fastuuid/" }
 
 [profile.release]
 lto = "fat"

@@ -2,7 +2,7 @@ FROM quay.io/pypa/manylinux2014_x86_64:latest
 
 RUN curl -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain nightly
 ENV PATH /root/.cargo/bin:$PATH
-RUN /opt/python/cp38-cp38/bin/pip install maturin
+RUN /opt/python/cp39-cp39/bin/pip install maturin
 
 RUN mkdir /tmp/src
 WORKDIR /tmp/src

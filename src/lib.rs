@@ -343,21 +343,21 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
         }
     }
 
-    #[pyfn(m, "uuid3")]
+    #[pyfn(m, name="uuid3")]
     fn uuid3(namespace: &UUID, name: &PyBytes) -> UUID {
         UUID {
             handle: Uuid::new_v3(&namespace.handle, name.as_bytes()),
         }
     }
 
-    #[pyfn(m, "uuid5")]
+    #[pyfn(m, name="uuid5")]
     fn uuid5(namespace: &UUID, name: &PyBytes) -> UUID {
         UUID {
             handle: Uuid::new_v5(&namespace.handle, name.as_bytes()),
         }
     }
 
-    #[pyfn(m, "uuid4_bulk")]
+    #[pyfn(m, name="uuid4_bulk")]
     fn uuid4_bulk(py: Python, n: usize) -> Vec<UUID> {
         py.allow_threads(|| {
             iter::repeat_with(|| UUID {
@@ -368,7 +368,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
         })
     }
 
-    #[pyfn(m, "uuid4_as_strings_bulk")]
+    #[pyfn(m, name="uuid4_as_strings_bulk")]
     fn uuid4_as_strings_bulk(py: Python, n: usize) -> Vec<String> {
         py.allow_threads(|| {
             iter::repeat_with(|| {
@@ -382,7 +382,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
         })
     }
 
-    #[pyfn(m, "uuid4")]
+    #[pyfn(m, name="uuid4")]
     fn uuid4() -> UUID {
         UUID {
             handle: Uuid::new_v4(),

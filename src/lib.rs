@@ -3,7 +3,6 @@ extern crate pyo3;
 extern crate uuid;
 
 use pyo3::class::basic::CompareOp;
-use pyo3::class::{PyNumberProtocol, PyObjectProtocol};
 use pyo3::exceptions::{PyTypeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::{PyBytes, PyInt, PyTuple};
@@ -16,6 +15,7 @@ use uuid::{Builder, Uuid, Variant, Version};
 fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
     #[pyclass(freelist = 1000)]
     #[derive(Clone)]
+    #[allow(clippy::upper_case_acronyms)]
     struct UUID {
         handle: Uuid,
     }
@@ -94,7 +94,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                     if f.len() != 6 {
                         Err(PyErr::new::<PyValueError, &str>("fields is not a 6-tuple"))
                     } else {
-                        let time_low = match f.get_item(0).downcast::<PyInt>()?.extract::<u32>() {
+                        let time_low = match f.get_item(0)?.downcast::<PyInt>()?.extract::<u32>() {
                             Ok(time_low) => Ok(u128::from(time_low)),
                             Err(_) => Err(PyErr::new::<PyValueError, &str>(
                                 "field 1 out of range (need a 32-bit value)",
@@ -106,7 +106,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                         }
                         let time_low = time_low.unwrap();
 
-                        let time_mid = match f.get_item(1).downcast::<PyInt>()?.extract::<u16>() {
+                        let time_mid = match f.get_item(1)?.downcast::<PyInt>()?.extract::<u16>() {
                             Ok(time_mid) => Ok(u128::from(time_mid)),
                             Err(_) => Err(PyErr::new::<PyValueError, &str>(
                                 "field 2 out of range (need a 16-bit value)",
@@ -119,7 +119,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                         let time_mid = time_mid.unwrap();
 
                         let time_high_version =
-                            match f.get_item(2).downcast::<PyInt>()?.extract::<u16>() {
+                            match f.get_item(2)?.downcast::<PyInt>()?.extract::<u16>() {
                                 Ok(time_high_version) => Ok(u128::from(time_high_version)),
                                 Err(_) => Err(PyErr::new::<PyValueError, &str>(
                                     "field 3 out of range (need a 16-bit value)",
@@ -132,7 +132,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                         let time_high_version = time_high_version.unwrap();
 
                         let clock_seq_hi_variant =
-                            match f.get_item(3).downcast::<PyInt>()?.extract::<u8>() {
+                            match f.get_item(3)?.downcast::<PyInt>()?.extract::<u8>() {
                                 Ok(clock_seq_hi_variant) => Ok(u128::from(clock_seq_hi_variant)),
                                 Err(_) => Err(PyErr::new::<PyValueError, &str>(
                                     "field 4 out of range (need a 8-bit value)",
@@ -144,20 +144,20 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                         };
                         let clock_seq_hi_variant = clock_seq_hi_variant.unwrap();
 
-                        let clock_seq_low = match f.get_item(4).downcast::<PyInt>()?.extract::<u8>()
-                        {
-                            Ok(clock_seq_low) => Ok(u128::from(clock_seq_low)),
-                            Err(_) => Err(PyErr::new::<PyValueError, &str>(
-                                "field 5 out of range (need a 8-bit value)",
-                            )),
-                        };
+                        let clock_seq_low =
+                            match f.get_item(4)?.downcast::<PyInt>()?.extract::<u8>() {
+                                Ok(clock_seq_low) => Ok(u128::from(clock_seq_low)),
+                                Err(_) => Err(PyErr::new::<PyValueError, &str>(
+                                    "field 5 out of range (need a 8-bit value)",
+                                )),
+                            };
 
                         if let Err(e) = clock_seq_low {
                             return Err(e);
                         };
                         let clock_seq_low = clock_seq_low.unwrap();
 
-                        let node = f.get_item(5).downcast::<PyInt>()?.extract::<u128>()?;
+                        let node = f.get_item(5)?.downcast::<PyInt>()?.extract::<u128>()?;
                         if node >= (1 << 48) {
                             return Err(PyErr::new::<PyValueError, &str>(
                                 "field 6 out of range (need a 48-bit value)",
@@ -299,10 +299,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
         fn node(&self) -> u64 {
             (self.int() & 0xffffffffffff) as u64
         }
-    }
 
-    #[pyproto]
-    impl<'p> PyObjectProtocol<'p> for UUID {
         fn __str__(&self) -> PyResult<String> {
             Ok(self
                 .handle
@@ -334,30 +331,27 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
 
             Ok(result)
         }
-    }
 
-    #[pyproto]
-    impl<'p> PyNumberProtocol<'p> for UUID {
         fn __int__(&self) -> PyResult<u128> {
             Ok(self.int())
         }
     }
 
-    #[pyfn(m, name="uuid3")]
+    #[pyfn(m, name = "uuid3")]
     fn uuid3(namespace: &UUID, name: &PyBytes) -> UUID {
         UUID {
             handle: Uuid::new_v3(&namespace.handle, name.as_bytes()),
         }
     }
 
-    #[pyfn(m, name="uuid5")]
+    #[pyfn(m, name = "uuid5")]
     fn uuid5(namespace: &UUID, name: &PyBytes) -> UUID {
         UUID {
             handle: Uuid::new_v5(&namespace.handle, name.as_bytes()),
         }
     }
 
-    #[pyfn(m, name="uuid4_bulk")]
+    #[pyfn(m, name = "uuid4_bulk")]
     fn uuid4_bulk(py: Python, n: usize) -> Vec<UUID> {
         py.allow_threads(|| {
             iter::repeat_with(|| UUID {
@@ -368,7 +362,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
         })
     }
 
-    #[pyfn(m, name="uuid4_as_strings_bulk")]
+    #[pyfn(m, name = "uuid4_as_strings_bulk")]
     fn uuid4_as_strings_bulk(py: Python, n: usize) -> Vec<String> {
         py.allow_threads(|| {
             iter::repeat_with(|| {
@@ -382,7 +376,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
         })
     }
 
-    #[pyfn(m, name="uuid4")]
+    #[pyfn(m, name = "uuid4")]
     fn uuid4() -> UUID {
         UUID {
             handle: Uuid::new_v4(),

@@ -1,3 +1,5 @@
+import copy
+import pickle
 import re
 import uuid
 
@@ -11,8 +13,10 @@ UUID_REGEX = re.compile("[0-F]{8}-([0-F]{4}-){3}[0-F]{12}", re.I)
 
 
 def test_uuid_without_arguments():
-    with pytest.raises(TypeError,
-                       match="one of the hex, bytes, bytes_le, fields, or int arguments must be given"):
+    with pytest.raises(
+        TypeError,
+        match="one of the hex, bytes, bytes_le, fields, or int arguments must be given",
+    ):
         UUID()
 
 
@@ -25,110 +29,122 @@ def test_hex(expected):
 
 @given(text())
 def test_hex_bad_string(bad_hex):
-    with pytest.raises(ValueError,
-                       match="badly formed hexadecimal UUID string"):
+    with pytest.raises(ValueError, match="badly formed hexadecimal UUID string"):
         UUID(bad_hex)
 
 
 @given(binary().filter(lambda x: len(x) != 16))
 def test_bad_bytes(bad_bytes):
-    with pytest.raises(ValueError,
-                       match="bytes is not a 16-char string"):
+    with pytest.raises(ValueError, match="bytes is not a 16-char string"):
         UUID(bytes=bad_bytes)
 
 
 @given(binary().filter(lambda x: len(x) != 16))
 def test_bad_bytes_le(bad_bytes):
-    with pytest.raises(ValueError,
-                       match="bytes_le is not a 16-char string"):
+    with pytest.raises(ValueError, match="bytes_le is not a 16-char string"):
         UUID(bytes_le=bad_bytes)
 
 
-@given(expected=uuids(),
-       bad_version=integers(min_value=6, max_value=20))
+@given(expected=uuids(), bad_version=integers(min_value=6, max_value=20))
 def test_bad_version(expected, bad_version):
-    with pytest.raises(ValueError,
-                       match="illegal version number"):
+    with pytest.raises(ValueError, match="illegal version number"):
         UUID(str(expected), version=bad_version)
 
 
 @given(lists(integers(), max_size=10).filter(lambda x: len(x) != 6))
 def test_wrong_fields_count(fields):
     fields = tuple(fields)
-    with pytest.raises(ValueError,
-                       match="fields is not a 6-tuple"):
+    with pytest.raises(ValueError, match="fields is not a 6-tuple"):
         UUID(fields=fields)
 
 
-@given(tuples(integers(min_value=1 << 32),
-              integers(min_value=0, max_value=1 << 16 - 1),
-              integers(min_value=0, max_value=1 << 16 - 1),
-              integers(min_value=0, max_value=1 << 8 - 1),
-              integers(min_value=0, max_value=1 << 8 - 1),
-              integers(min_value=0, max_value=1 << 48 - 1)))
+@given(
+    tuples(
+        integers(min_value=1 << 32),
+        integers(min_value=0, max_value=1 << 16 - 1),
+        integers(min_value=0, max_value=1 << 16 - 1),
+        integers(min_value=0, max_value=1 << 8 - 1),
+        integers(min_value=0, max_value=1 << 8 - 1),
+        integers(min_value=0, max_value=1 << 48 - 1),
+    )
+)
 def test_fields_time_low_out_of_range(fields):
-    with pytest.raises(ValueError,
-                       match=r"field 1 out of range \(need a 32-bit value\)"):
+    with pytest.raises(ValueError, match=r"field 1 out of range \(need a 32-bit value\)"):
         UUID(fields=fields)
 
 
-@given(tuples(integers(min_value=0, max_value=1 << 32 - 1),
-              integers(min_value=1 << 16),
-              integers(min_value=0, max_value=1 << 16 - 1),
-              integers(min_value=0, max_value=1 << 8 - 1),
-              integers(min_value=0, max_value=1 << 8 - 1),
-              integers(min_value=0, max_value=1 << 48 - 1)))
+@given(
+    tuples(
+        integers(min_value=0, max_value=1 << 32 - 1),
+        integers(min_value=1 << 16),
+        integers(min_value=0, max_value=1 << 16 - 1),
+        integers(min_value=0, max_value=1 << 8 - 1),
+        integers(min_value=0, max_value=1 << 8 - 1),
+        integers(min_value=0, max_value=1 << 48 - 1),
+    )
+)
 def test_fields_time_mid_out_of_range(fields):
-    with pytest.raises(ValueError,
-                       match=r"field 2 out of range \(need a 16-bit value\)"):
+    with pytest.raises(ValueError, match=r"field 2 out of range \(need a 16-bit value\)"):
         UUID(fields=fields)
 
 
-@given(tuples(integers(min_value=0, max_value=1 << 32 - 1),
-              integers(min_value=0, max_value=1 << 16 - 1),
-              integers(min_value=1 << 16),
-              integers(min_value=0, max_value=1 << 8 - 1),
-              integers(min_value=0, max_value=1 << 8 - 1),
-              integers(min_value=0, max_value=1 << 48 - 1)))
+@given(
+    tuples(
+        integers(min_value=0, max_value=1 << 32 - 1),
+        integers(min_value=0, max_value=1 << 16 - 1),
+        integers(min_value=1 << 16),
+        integers(min_value=0, max_value=1 << 8 - 1),
+        integers(min_value=0, max_value=1 << 8 - 1),
+        integers(min_value=0, max_value=1 << 48 - 1),
+    )
+)
 def test_fields_time_high_version_out_of_range(fields):
-    with pytest.raises(ValueError,
-                       match=r"field 3 out of range \(need a 16-bit value\)"):
+    with pytest.raises(ValueError, match=r"field 3 out of range \(need a 16-bit value\)"):
         UUID(fields=fields)
 
 
-@given(tuples(integers(min_value=0, max_value=1 << 32 - 1),
-              integers(min_value=0, max_value=1 << 16 - 1),
-              integers(min_value=0, max_value=1 << 16 - 1),
-              integers(min_value=1 << 8),
-              integers(min_value=0, max_value=1 << 8 - 1),
-              integers(min_value=0, max_value=1 << 48 - 1)))
+@given(
+    tuples(
+        integers(min_value=0, max_value=1 << 32 - 1),
+        integers(min_value=0, max_value=1 << 16 - 1),
+        integers(min_value=0, max_value=1 << 16 - 1),
+        integers(min_value=1 << 8),
+        integers(min_value=0, max_value=1 << 8 - 1),
+        integers(min_value=0, max_value=1 << 48 - 1),
+    )
+)
 def test_fields_clock_seq_hi_variant_out_of_range(fields):
-    with pytest.raises(ValueError,
-                       match=r"field 4 out of range \(need a 8-bit value\)"):
+    with pytest.raises(ValueError, match=r"field 4 out of range \(need a 8-bit value\)"):
         UUID(fields=fields)
 
 
-@given(tuples(integers(min_value=0, max_value=1 << 32 - 1),
-              integers(min_value=0, max_value=1 << 16 - 1),
-              integers(min_value=0, max_value=1 << 16 - 1),
-              integers(min_value=0, max_value=1 << 8 - 1),
-              integers(min_value=1 << 8),
-              integers(min_value=0, max_value=1 << 48 - 1)))
+@given(
+    tuples(
+        integers(min_value=0, max_value=1 << 32 - 1),
+        integers(min_value=0, max_value=1 << 16 - 1),
+        integers(min_value=0, max_value=1 << 16 - 1),
+        integers(min_value=0, max_value=1 << 8 - 1),
+        integers(min_value=1 << 8),
+        integers(min_value=0, max_value=1 << 48 - 1),
+    )
+)
 def test_fields_clock_seq_low_out_of_range(fields):
-    with pytest.raises(ValueError,
-                       match=r"field 5 out of range \(need a 8-bit value\)"):
+    with pytest.raises(ValueError, match=r"field 5 out of range \(need a 8-bit value\)"):
         UUID(fields=fields)
 
 
-@given(tuples(integers(min_value=0, max_value=1 << 32 - 1),
-              integers(min_value=0, max_value=1 << 16 - 1),
-              integers(min_value=0, max_value=1 << 16 - 1),
-              integers(min_value=0, max_value=1 << 8 - 1),
-              integers(min_value=0, max_value=1 << 8 - 1),
-              integers(min_value=1 << 48)))
+@given(
+    tuples(
+        integers(min_value=0, max_value=1 << 32 - 1),
+        integers(min_value=0, max_value=1 << 16 - 1),
+        integers(min_value=0, max_value=1 << 16 - 1),
+        integers(min_value=0, max_value=1 << 8 - 1),
+        integers(min_value=0, max_value=1 << 8 - 1),
+        integers(min_value=1 << 48),
+    )
+)
 def test_fields_node_out_of_range(fields):
-    with pytest.raises(ValueError,
-                       match=r"field 6 out of range \(need a 48-bit value\)"):
+    with pytest.raises(ValueError, match=r"field 6 out of range \(need a 48-bit value\)"):
         UUID(fields=fields)
 
 
@@ -302,3 +318,27 @@ def test_uuid5():
     assert expected.variant == "specified in RFC 4122"
     assert UUID_REGEX.match(str(expected))
     assert str(expected) == str(uuid.UUID(str(expected)))
+
+
+@given(uuids())
+def test_pickle_unpickle(slow_uuid):
+    fast_uuid = UUID(int=slow_uuid.int)
+    pickled = pickle.dumps(fast_uuid)
+    unpickled = pickle.loads(pickled)
+    assert str(fast_uuid) == str(unpickled)
+    assert str(slow_uuid) == str(unpickled)
+    assert fast_uuid == unpickled
+    assert fast_uuid is not unpickled
+
+
+@given(uuids())
+def test_copying(slow_uuid):
+    fast_uuid = UUID(int=slow_uuid.int)
+
+    other = copy.copy(fast_uuid)
+    assert other == fast_uuid
+    assert other is not fast_uuid
+
+    other_deep = copy.deepcopy(fast_uuid)
+    assert other_deep == fast_uuid
+    assert other_deep is not fast_uuid

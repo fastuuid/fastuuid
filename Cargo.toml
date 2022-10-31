@@ -1,6 +1,6 @@
 [package]
 name = "fastuuid"
-version = "0.8.0"
+version = "0.9.0"
 authors = ["Omer Katz <omer.drow@gmail.com>"]
 license = "BSD3"
 description = "Python bindings to Rust's UUID library."
@@ -14,7 +14,7 @@ version = "0.17.1"
 features = ["extension-module"]
 
 [dependencies.uuid]
-version = "0.8.2"
+version = "1"
 features = ["v1", "v3", "v4", "v5"]
 
 [package.metadata.maturin]
@@ -29,6 +29,7 @@ classifier = [
   "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: Implementation :: CPython",
   "Topic :: Software Development :: Libraries",
   "Topic :: Software Development :: Libraries :: Python Modules"

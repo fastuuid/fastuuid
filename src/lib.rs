@@ -5,7 +5,7 @@ extern crate uuid;
 use pyo3::class::basic::CompareOp;
 use pyo3::exceptions::{PyTypeError, PyValueError};
 use pyo3::prelude::*;
-use pyo3::types::{PyBytes, PyInt, PyTuple};
+use pyo3::types::{PyBytes, PyDict, PyInt, PyTuple};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::iter;
@@ -13,7 +13,7 @@ use uuid::{Builder, Uuid, Variant, Version};
 
 #[pymodule]
 fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
-    #[pyclass(freelist = 1000)]
+    #[pyclass(freelist = 1000, module = "fastuuid")]
     #[derive(Clone)]
     #[allow(clippy::upper_case_acronyms)]
     struct UUID {
@@ -61,7 +61,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                             if let Some(v) = version {
                                 builder.set_version(v);
                             }
-                            Ok(builder.build())
+                            Ok(builder.into_uuid())
                         }
                         Err(_) => Err(PyErr::new::<PyValueError, &str>(
                             "bytes is not a 16-char string",
@@ -86,7 +86,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                         if let Some(v) = version {
                             builder.set_version(v);
                         }
-                        Ok(builder.build())
+                        Ok(builder.into_uuid())
                     }
                 }
                 (None, None, None, Some(fields), None) => {
@@ -209,7 +209,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
         #[getter]
         fn hex(&self) -> String {
             self.handle
-                .to_simple()
+                .simple()
                 .encode_lower(&mut Uuid::encode_buffer())
                 .to_string()
         }
@@ -217,7 +217,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
         #[getter]
         fn urn(&self) -> String {
             self.handle
-                .to_urn()
+                .urn()
                 .encode_lower(&mut Uuid::encode_buffer())
                 .to_string()
         }
@@ -230,10 +230,10 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
         #[getter]
         fn variant(&self) -> Option<&'static str> {
             match self.handle.get_variant() {
-                Some(Variant::NCS) => Some("reserved for NCS compatibility"),
-                Some(Variant::RFC4122) => Some("specified in RFC 4122"),
-                Some(Variant::Microsoft) => Some("reserved for Microsoft compatibility"),
-                Some(Variant::Future) => Some("reserved for future definition"),
+                Variant::NCS => Some("reserved for NCS compatibility"),
+                Variant::RFC4122 => Some("specified in RFC 4122"),
+                Variant::Microsoft => Some("reserved for Microsoft compatibility"),
+                Variant::Future => Some("reserved for future definition"),
                 _ => None,
             }
         }
@@ -303,7 +303,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
         fn __str__(&self) -> PyResult<String> {
             Ok(self
                 .handle
-                .to_hyphenated()
+                .hyphenated()
                 .encode_lower(&mut Uuid::encode_buffer())
                 .to_string())
         }
@@ -334,6 +334,50 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
 
         fn __int__(&self) -> PyResult<u128> {
             Ok(self.int())
+        }
+
+        pub fn __getstate__<'py>(&self, py: Python<'py>) -> PyResult<&'py PyBytes> {
+            Ok(PyBytes::new(py, self.bytes()))
+        }
+
+        pub fn __setstate__(&mut self, py: Python, state: PyObject) -> PyResult<()> {
+            let bytes_state = state.extract::<&PyBytes>(py)?;
+            let uuid_builder = Builder::from_slice(bytes_state.as_bytes());
+
+            match uuid_builder {
+                Ok(builder) => {
+                    self.handle = builder.into_uuid();
+                    Ok(())
+                }
+                Err(_) => Err(PyErr::new::<PyValueError, &str>(
+                    "bytes is not a 16-char string",
+                )),
+            }
+        }
+
+        #[allow(clippy::type_complexity)]
+        pub fn __getnewargs__(
+            &self,
+        ) -> PyResult<(
+            Option<&str>,
+            Option<&PyBytes>,
+            Option<&PyBytes>,
+            Option<&PyTuple>,
+            Option<u128>,
+            Option<u8>,
+        )> {
+            // hex, bytes, bytes_le, fields, int, version. The cheapest to compute valid call to new. The actual value
+            // will be set by __setstate__ as part of unpickling.
+            Ok((None, None, None, None, Some(0u128), None))
+        }
+
+        pub fn __copy__(&self) -> Self {
+            self.clone()
+        }
+
+        pub fn __deepcopy__(&self, _memo: &PyDict) -> Self {
+            // fast bitwise copy instead of python's pickling process
+            self.clone()
         }
     }
 
@@ -367,7 +411,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
         py.allow_threads(|| {
             iter::repeat_with(|| {
                 (*Uuid::new_v4()
-                    .to_simple()
+                    .simple()
                     .encode_lower(&mut Uuid::encode_buffer()))
                 .to_string()
             })

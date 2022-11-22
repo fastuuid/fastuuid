@@ -13,7 +13,7 @@ use uuid::{Builder, Uuid, Variant, Version};
 
 #[pymodule]
 fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
-    #[pyclass(freelist = 1000, module = "fastuuid")]
+    #[pyclass(subclass, freelist = 1000, module = "fastuuid")]
     #[derive(Clone)]
     #[allow(clippy::upper_case_acronyms)]
     struct UUID {

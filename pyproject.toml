@@ -8,3 +8,26 @@ line-length = 120
 [tool.isort]
 profile = "black"
 multi_line_output = 3
+
+[project]
+name = "fastuuid"
+classifier = [
+  "Development Status :: 4 - Beta",
+  "License :: OSI Approved :: BSD License",
+  "Programming Language :: Rust",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.7",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Topic :: Software Development :: Libraries",
+  "Topic :: Software Development :: Libraries :: Python Modules"
+]
+maintainer = "Omer Katz"
+maintainer-email = "omer.drow@gmail.com"
+requires-python = ">=3.7"
+project-url = { homepage = "https://github.com/thedrow/fastuuid/" }

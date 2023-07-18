@@ -6,6 +6,7 @@ from uuid import UUID, uuid1, uuid3, uuid4, uuid5
 from uuid_extensions import uuid7, uuid7str
 
 import pytest
+from uuid_extensions import uuid7, uuid7str
 
 from fastuuid import UUID as FastUUID
 from fastuuid import uuid1 as fastuuid1

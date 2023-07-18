@@ -7,7 +7,7 @@ import pytest
 from hypothesis import given
 from hypothesis.strategies import binary, integers, lists, text, tuples, uuids
 
-from fastuuid import UUID, uuid3, uuid4, uuid5
+from fastuuid import UUID, uuid3, uuid4, uuid5, uuid7
 
 UUID_REGEX = re.compile("[0-F]{8}-([0-F]{4}-){3}[0-F]{12}", re.I)
 
@@ -315,6 +315,14 @@ def test_uuid4():
 def test_uuid5():
     expected = uuid5(uuid4(), b"foo")
     assert expected.version == 5
+    assert expected.variant == "specified in RFC 4122"
+    assert UUID_REGEX.match(str(expected))
+    assert str(expected) == str(uuid.UUID(str(expected)))
+
+
+def test_uuid7():
+    expected = uuid7()
+    assert expected.version == 7
     assert expected.variant == "specified in RFC 4122"
     assert UUID_REGEX.match(str(expected))
     assert str(expected) == str(uuid.UUID(str(expected)))

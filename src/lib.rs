@@ -427,6 +427,38 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
         }
     }
 
+    #[pyfn(m, name = "uuid7_bulk")]
+    fn uuid7_bulk(py: Python, n: usize) -> Vec<UUID> {
+        py.allow_threads(|| {
+            iter::repeat_with(|| UUID {
+                handle: Uuid::now_v7(),
+            })
+            .take(n)
+            .collect()
+        })
+    }
+
+    #[pyfn(m, name = "uuid7_as_strings_bulk")]
+    fn uuid7_as_strings_bulk(py: Python, n: usize) -> Vec<String> {
+        py.allow_threads(|| {
+            iter::repeat_with(|| {
+                (*Uuid::now_v7()
+                    .simple()
+                    .encode_lower(&mut Uuid::encode_buffer()))
+                .to_string()
+            })
+            .take(n)
+            .collect()
+        })
+    }
+
+    #[pyfn(m, name = "uuid7")]
+    fn uuid7() -> UUID {
+        UUID {
+            handle: Uuid::now_v7(),
+        }
+    }
+
     m.add_class::<UUID>()?;
 
     Ok(())

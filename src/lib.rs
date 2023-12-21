@@ -1,6 +1,7 @@
 #![deny(warnings)]
 extern crate pyo3;
 extern crate uuid;
+extern crate rand;
 
 use pyo3::class::basic::CompareOp;
 use pyo3::exceptions::{PyTypeError, PyValueError};
@@ -9,7 +10,30 @@ use pyo3::types::{PyBytes, PyDict, PyInt, PyTuple};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::iter;
-use uuid::{Builder, Uuid, Variant, Version};
+use rand::random;
+use uuid::{Builder, Context, Timestamp, Uuid, Variant, Version};
+
+
+/// Generate a random node ID.
+/// In hope to be compliant with RFC4122, we set the multicast bit to 1.
+/// https://www.rfc-editor.org/rfc/rfc4122.html#section-4.5
+///
+/// The "multicast bit" of a MAC address is defined to be "the least
+/// significant bit of the first octet". This works out to be the 41st bit
+/// counting from 1 being the least significant bit, or 1<<40.
+///
+#[inline]
+fn random_node_id() -> [u8; 6] {
+    let bytes = random::<u64>().to_be_bytes();
+    [
+        bytes[2] | 0x01, // set multicast bit
+        bytes[3],
+        bytes[4],
+        bytes[5],
+        bytes[6],
+        bytes[7],
+    ]
+}
 
 #[pymodule]
 fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
@@ -424,6 +448,51 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
     fn uuid4() -> UUID {
         UUID {
             handle: Uuid::new_v4(),
+        }
+    }
+
+    #[pyfn(m, name = "uuid1")]
+    fn uuid1(py: Python, node: Option<u64>, clock_seq: Option<u16>) -> PyResult<UUID> {
+        let node = match node {
+            Some(node) => {
+                let bytes = node.to_be_bytes();
+                [bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7]]
+            }
+            _ => {
+                // TODO: use a native implementation of getnode() instead of calling Python.
+                // This is already quite fast, since the value is cached in Python.
+                let py_uuid = PyModule::import(py, "uuid")?;
+                let node = py_uuid.getattr("getnode")?.call0()?.extract::<u64>()?;
+                let bytes = node.to_be_bytes();
+                [bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7]]
+            }
+        };
+        Ok(match clock_seq {
+            Some(clock_seq) => {
+                // Timestamp::now(Context::new(clock_seq)) acquires an Atomic<u16>.
+                // If we can avoid it, we can probably get another performance boost.
+                let ts = Timestamp::now(Context::new(clock_seq));
+                UUID {
+                    handle: Uuid::new_v1(ts, &node),
+                }
+            }
+            _ => UUID {
+                handle: Uuid::now_v1(&node),
+            },
+        })
+    }
+
+    /// Fast path for uuid1 with a randomly generated MAC address.
+    /// à la postgres' uuid extension.
+    /// Further Reading:
+    ///   - https://www.postgresql.org/docs/current/uuid-ossp.html
+    ///   - https://www.edgedb.com/docs/stdlib/uuid#function::std::uuid_generate_v1mc
+    ///   - https://supabase.com/blog/choosing-a-postgres-primary-key#uuidv1
+    ///   -
+    #[pyfn(m, name = "uuid_v1mc")]
+    fn uuid_v1mc() -> UUID {
+        UUID {
+            handle: Uuid::now_v1(&random_node_id()),
         }
     }
 

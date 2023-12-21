@@ -9,6 +9,9 @@ description = "Python bindings to Rust's UUID library."
 name = "fastuuid"
 crate-type = ["cdylib"]
 
+[dependencies]
+rand = "0.8.5"
+
 [dependencies.pyo3]
 version = "0.17.1"
 features = ["extension-module"]

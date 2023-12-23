@@ -7,7 +7,7 @@ import pytest
 from hypothesis import given
 from hypothesis.strategies import binary, integers, lists, text, tuples, uuids
 
-from fastuuid import UUID, uuid3, uuid4, uuid5
+from fastuuid import UUID, uuid3, uuid4, uuid5, uuid1, uuid_v1mc
 
 UUID_REGEX = re.compile("[0-F]{8}-([0-F]{4}-){3}[0-F]{12}", re.I)
 
@@ -174,6 +174,36 @@ def test_equality():
     assert expected != other
 
 
+@pytest.mark.parametrize(
+    ("node", "clock_seq"),
+    [
+        (123, 456),
+        (123, None),
+        (None, 456),
+        (None, None),
+    ],
+)
+def test_uuid1_equality(node, clock_seq):
+    expected = uuid1(node=node, clock_seq=clock_seq)
+    actual = UUID(str(expected))
+    other = uuid1(node=node, clock_seq=clock_seq)
+
+    assert expected == actual
+    assert expected.node == other.node
+    assert expected != other
+
+
+def test_uuid1mc_equality():
+    expected = uuid_v1mc()
+    actual = UUID(str(expected))
+    other = uuid_v1mc()
+
+    assert expected == actual
+    # Node ID is randomized
+    assert expected.node != other.node
+    assert expected != other
+
+
 def test_comparision():
     a = UUID(int=10)
     b = UUID(int=20)
@@ -294,6 +324,31 @@ def test_node_property(u):
     actual = UUID(str(u)).node
 
     assert expected == actual
+
+
+@pytest.mark.parametrize(
+    ("node", "clock_seq"),
+    [
+        (123, 456),
+        (123, None),
+        (None, 456),
+        (None, None),
+    ],
+)
+def test_uuid1(node, clock_seq):
+    expected = uuid1(node=node, clock_seq=clock_seq)
+    assert expected.version == 1
+    assert expected.variant == "specified in RFC 4122"
+    assert UUID_REGEX.match(str(expected))
+    assert str(expected) == str(uuid.UUID(str(expected)))
+
+
+def test_uuid1mc():
+    expected = uuid_v1mc()
+    assert expected.version == 1
+    assert expected.variant == "specified in RFC 4122"
+    assert UUID_REGEX.match(str(expected))
+    assert str(expected) == str(uuid.UUID(str(expected)))
 
 
 def test_uuid3():

@@ -10,6 +10,7 @@ from uuid_extensions import uuid7, uuid7str
 
 from fastuuid import UUID as FastUUID
 from fastuuid import uuid1 as fastuuid1
+from fastuuid import uuid_v1mc as fast_uuid_v1mc
 from fastuuid import uuid3 as fastuuid3
 from fastuuid import uuid4 as fastuuid4
 from fastuuid import uuid4_as_strings_bulk, uuid4_bulk
@@ -17,6 +18,11 @@ from fastuuid import uuid5 as fastuuid5
 from fastuuid import uuid7 as fastuuid7
 from fastuuid import uuid7_as_strings_bulk, uuid7_bulk
 from fastuuid import uuid_v1mc as fast_uuid_v1mc
+
+
+def uuid_v1mc():
+    """Reference implementation of uuid_v1mc()."""
+    return uuid1(getrandbits(48) | (1 << 40), getrandbits(14))
 
 
 def uuid_v1mc():

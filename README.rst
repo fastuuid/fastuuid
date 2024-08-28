@@ -56,9 +56,4 @@ tests/test_benchmarks.py::test_uuidv5                    3.7190038710832596e-06 
 
 Run them yourself to verify.
 
-What's Missing?
----------------
-
-- UUIDv1 generation
-
 PRs are welcome.

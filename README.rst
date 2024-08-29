@@ -8,7 +8,7 @@ FastUUID is a library which provides CPython bindings to Rust's UUID library.
 
 The provided API is exactly as Python's builtin UUID class.
 
-It is supported on Python 3.7, 3.8, 3.9, 3.10 & 3.11.
+It is supported on Python 3.7, 3.8, 3.9, 3.10, 3.11 & 3.12.
 
 Why?
 ----
@@ -55,10 +55,5 @@ tests/test_benchmarks.py::test_uuidv5                    3.7190038710832596e-06 
 =======================================================  ======================  ======================  ======================  ======================  ======================  ======================  ==========  ==================  ======  ==========
 
 Run them yourself to verify.
-
-What's Missing?
----------------
-
-- UUIDv1 generation
 
 PRs are welcome.

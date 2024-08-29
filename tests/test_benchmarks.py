@@ -3,8 +3,10 @@ from concurrent.futures import ThreadPoolExecutor
 from pickle import dumps, loads
 from random import getrandbits
 from uuid import UUID, uuid1, uuid3, uuid4, uuid5
+from uuid_extensions import uuid7, uuid7str
 
 import pytest
+from uuid_extensions import uuid7, uuid7str
 
 from fastuuid import UUID as FastUUID
 from fastuuid import uuid1 as fastuuid1
@@ -13,6 +15,19 @@ from fastuuid import uuid3 as fastuuid3
 from fastuuid import uuid4 as fastuuid4
 from fastuuid import uuid4_as_strings_bulk, uuid4_bulk
 from fastuuid import uuid5 as fastuuid5
+from fastuuid import uuid7 as fastuuid7
+from fastuuid import uuid7_as_strings_bulk, uuid7_bulk
+from fastuuid import uuid_v1mc as fast_uuid_v1mc
+
+
+def uuid_v1mc():
+    """Reference implementation of uuid_v1mc()."""
+    return uuid1(getrandbits(48) | (1 << 40), getrandbits(14))
+
+
+def uuid_v1mc():
+    """Reference implementation of uuid_v1mc()."""
+    return uuid1(getrandbits(48) | (1 << 40), getrandbits(14))
 
 
 def uuid_v1mc():
@@ -156,6 +171,16 @@ def test_fast_uuidv5(benchmark):
     benchmark(fastuuid5, fastuuid4(), b"benchmark")
 
 
+@pytest.mark.benchmark(group="uuidv7")
+def test_uuidv7(benchmark):
+    benchmark(uuid7)
+
+
+@pytest.mark.benchmark(group="uuidv7")
+def test_fast_uuidv7(benchmark):
+    benchmark(fastuuid7)
+
+
 @pytest.mark.benchmark(group="uuidv4 8 threads")
 def test_uuidv4_threads(benchmark):
     @benchmark
@@ -223,6 +248,76 @@ def test_fast_uuidv4_as_strings_bulk_threads(benchmark):
         pool = ThreadPoolExecutor(max_workers=8)
         for _ in range(8):
             pool.submit(uuid4_as_strings_bulk, 1000)
+        pool.shutdown(wait=True)
+
+
+@pytest.mark.benchmark(group="uuidv7 8 threads")
+def test_uuidv7_threads(benchmark):
+    @benchmark
+    def b():
+        pool = ThreadPoolExecutor(max_workers=8)
+        for _ in range(8):
+            pool.submit(lambda: [uuid7() for _ in range(1000)])
+        pool.shutdown(wait=True)
+
+
+@pytest.mark.benchmark(group="uuidv7 8 threads")
+def test_fast_uuidv7_threads(benchmark):
+    @benchmark
+    def b():
+        pool = ThreadPoolExecutor(max_workers=8)
+        for _ in range(8):
+            pool.submit(lambda: [fastuuid7() for _ in range(1000)])
+        pool.shutdown(wait=True)
+
+
+@pytest.mark.benchmark(group="uuidv7 8 threads")
+def test_fast_uuidv7_bulk_threads(benchmark):
+    @benchmark
+    def b():
+        pool = ThreadPoolExecutor(max_workers=8)
+        for _ in range(8):
+            pool.submit(uuid7_bulk, 1000)
+        pool.shutdown(wait=True)
+
+
+@pytest.mark.benchmark(group="uuidv7 8 threads - strings")
+def test_uuidv7_str_threads(benchmark):
+    @benchmark
+    def b():
+        pool = ThreadPoolExecutor(max_workers=8)
+        for _ in range(8):
+            pool.submit(lambda: [str(uuid7()) for _ in range(1000)])
+        pool.shutdown(wait=True)
+
+
+@pytest.mark.benchmark(group="uuidv7 8 threads - strings")
+def test_fast_uuidv7_str_threads(benchmark):
+    @benchmark
+    def b():
+        pool = ThreadPoolExecutor(max_workers=8)
+        for _ in range(8):
+            pool.submit(lambda: [str(fastuuid7()) for _ in range(1000)])
+        pool.shutdown(wait=True)
+
+
+@pytest.mark.benchmark(group="uuidv7 8 threads - strings")
+def test_fast_uuidv7_bulk_convert_to_strings_threads(benchmark):
+    @benchmark
+    def b():
+        pool = ThreadPoolExecutor(max_workers=8)
+        for _ in range(8):
+            pool.submit(lambda: map(str, uuid7_bulk(1000)))
+        pool.shutdown(wait=True)
+
+
+@pytest.mark.benchmark(group="uuidv7 8 threads - strings")
+def test_fast_uuidv7_as_strings_bulk_threads(benchmark):
+    @benchmark
+    def b():
+        pool = ThreadPoolExecutor(max_workers=8)
+        for _ in range(8):
+            pool.submit(uuid7_as_strings_bulk, 1000)
         pool.shutdown(wait=True)
 
 

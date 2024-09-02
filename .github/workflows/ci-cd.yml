@@ -51,9 +51,12 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install maturin twine
+          pip install maturin[zig] twine
       - name: Build wheels
-        run: maturin build --release
+        # Build a wheel for the current python version in release mode
+        # When running on linux, use zig to build the oldest possible manylinux wheel
+        # In addition, check the wheel with auditwheel, but without auto-repair
+        run: maturin build --release --compatibility --zig --auditwheel check
       - name: Build sdist
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
         run: maturin sdist

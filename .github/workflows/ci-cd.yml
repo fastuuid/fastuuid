@@ -53,6 +53,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install maturin[zig] twine
       - name: Build wheels
+        run: maturin build --release
+      - name: Build wheels for older linux versions
+        if: matrix.os == 'ubuntu-latest'
         # Build a wheel for the current python version in release mode
         # When running on linux, use zig to build the oldest possible manylinux wheel
         # In addition, check the wheel with auditwheel, but without auto-repair

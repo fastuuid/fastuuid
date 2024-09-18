@@ -57,7 +57,7 @@ jobs:
       - name: Build wheels for older linux versions
         if: matrix.os == 'ubuntu-latest'
         # Build a wheel for the current python version in release mode
-        # When running on linux, use zig to build the oldest possible manylinux wheel
+        # When runningd on linux, use zig to build the oldest possible manylinux wheel
         # In addition, check the wheel with auditwheel, but without auto-repair
         run: maturin build --release --compatibility --zig --auditwheel check
       - name: Build sdist

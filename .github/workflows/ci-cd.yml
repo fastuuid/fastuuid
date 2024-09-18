@@ -9,7 +9,7 @@ on:
     branches: [master]
 
 jobs:
-  setup:
+  test:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -27,42 +27,38 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install maturin[zig] twine tox==3.28.0 tox-gh-actions==2.12.0 tox-pyo3
-          
-  test:
-    needs: setup
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix: ${{ fromJson(steps.setup.outputs.matrix) }}
-    steps:
+          pip install tox==3.28.0 tox-gh-actions==2.12.0 tox-pyo3 maturin
       - name: Run tests
         run: tox
 
-  build:
-    needs: setup
-    runs-on: ${{ matrix.os }}
-    if: github.event_name == 'push'
-    steps:
-      - name: Build wheels
-        run: maturin build --release
-      - name: Build wheels for older Linux versions
-        if: matrix.os == 'ubuntu-latest'
-        run: maturin build --release --compatibility --zig --auditwheel check
-      - name: Build sdist
-        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
-        run: maturin sdist
-      - name: Display structure of built files
-        run: ls -R target/wheels
-
   build-and-publish:
-    needs: setup
+    needs: test
     runs-on: ${{ matrix.os }}
     if: github.event_name == 'push' && contains(github.ref, '.')
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11', '3.12']
+        exclude:
+          - os: macos-latest
+            python-version: '3.7'
     steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install maturin[zig] twine
       - name: Build wheels
         run: maturin build --release
-      - name: Build wheels for older Linux versions
+      - name: Build wheels for older linux versions
         if: matrix.os == 'ubuntu-latest'
+        # Build a wheel for the current python version in release mode
+        # When running on linux, use zig to build the oldest possible manylinux wheel
+        # In addition, check the wheel with auditwheel, but without auto-repair
         run: maturin build --release --compatibility --zig --auditwheel check
       - name: Build sdist
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'

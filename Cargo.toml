@@ -13,11 +13,11 @@ crate-type = ["cdylib"]
 rand = "0.8.5"
 
 [dependencies.pyo3]
-version = "0.17.1"
+version = "0.22.2"
 features = ["extension-module"]
 
 [dependencies.uuid]
-version = "1.4.1"
+version = "1.10.0"
 features = ["v1", "v3", "v4", "v5", "v7"]
 
 [profile.release]

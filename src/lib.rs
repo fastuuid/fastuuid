@@ -1,18 +1,17 @@
 #![deny(warnings)]
 extern crate pyo3;
-extern crate uuid;
 extern crate rand;
+extern crate uuid;
 
 use pyo3::class::basic::CompareOp;
 use pyo3::exceptions::{PyTypeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::{PyBytes, PyDict, PyInt, PyTuple};
+use rand::random;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::iter;
-use rand::random;
 use uuid::{Builder, Context, Timestamp, Uuid, Variant, Version};
-
 
 /// Generate a random node ID.
 /// In hope to be compliant with RFC4122, we set the multicast bit to 1.
@@ -36,8 +35,10 @@ fn random_node_id() -> [u8; 6] {
 }
 
 #[pymodule]
-fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
-    #[pyclass(subclass, freelist = 1000, module = "fastuuid")]
+mod fastuuid {
+    use super::*;
+
+    #[pyclass(subclass, freelist = 1000)]
     #[derive(Clone)]
     #[allow(clippy::upper_case_acronyms)]
     struct UUID {
@@ -47,12 +48,13 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
     #[pymethods]
     impl UUID {
         #[new]
+        #[pyo3(signature = (hex=None, bytes=None, bytes_le=None, fields=None, int=None, version=None))]
         #[allow(clippy::too_many_arguments)]
         fn new(
             hex: Option<&str>,
-            bytes: Option<&PyBytes>,
-            bytes_le: Option<&PyBytes>,
-            fields: Option<&PyTuple>,
+            bytes: Option<&Bound<PyBytes>>,
+            bytes_le: Option<&Bound<PyBytes>>,
+            fields: Option<&Bound<PyTuple>>,
             int: Option<u128>,
             version: Option<u8>,
         ) -> PyResult<Self> {
@@ -125,10 +127,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                             )),
                         };
 
-                        if let Err(e) = time_low {
-                            return Err(e);
-                        }
-                        let time_low = time_low.unwrap();
+                        let time_low = time_low?;
 
                         let time_mid = match f.get_item(1)?.downcast::<PyInt>()?.extract::<u16>() {
                             Ok(time_mid) => Ok(u128::from(time_mid)),
@@ -137,10 +136,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                             )),
                         };
 
-                        if let Err(e) = time_mid {
-                            return Err(e);
-                        }
-                        let time_mid = time_mid.unwrap();
+                        let time_mid = time_mid?;
 
                         let time_high_version =
                             match f.get_item(2)?.downcast::<PyInt>()?.extract::<u16>() {
@@ -150,10 +146,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                                 )),
                             };
 
-                        if let Err(e) = time_high_version {
-                            return Err(e);
-                        }
-                        let time_high_version = time_high_version.unwrap();
+                        let time_high_version = time_high_version?;
 
                         let clock_seq_hi_variant =
                             match f.get_item(3)?.downcast::<PyInt>()?.extract::<u8>() {
@@ -163,10 +156,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                                 )),
                             };
 
-                        if let Err(e) = clock_seq_hi_variant {
-                            return Err(e);
-                        };
-                        let clock_seq_hi_variant = clock_seq_hi_variant.unwrap();
+                        let clock_seq_hi_variant = clock_seq_hi_variant?;
 
                         let clock_seq_low =
                             match f.get_item(4)?.downcast::<PyInt>()?.extract::<u8>() {
@@ -176,10 +166,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                                 )),
                             };
 
-                        if let Err(e) = clock_seq_low {
-                            return Err(e);
-                        };
-                        let clock_seq_low = clock_seq_low.unwrap();
+                        let clock_seq_low = clock_seq_low?;
 
                         let node = f.get_item(5)?.downcast::<PyInt>()?.extract::<u128>()?;
                         if node >= (1 << 48) {
@@ -193,7 +180,6 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
                         let time_mid = time_mid.wrapping_shl(80);
                         let time_high_version = time_high_version.wrapping_shl(64);
                         let clock_seq = clock_seq.wrapping_shl(48);
-                        let node = node;
                         let int = time_low | time_mid | time_high_version | clock_seq | node;
                         Ok(Uuid::from_u128(int))
                     }
@@ -221,13 +207,13 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
         }
 
         #[getter]
-        fn bytes_le<'py>(&self, py: Python<'py>) -> &'py PyBytes {
+        fn bytes_le<'py>(&self, py: Python<'py>) -> Bound<'py, PyBytes> {
             let mut b = *self.handle.as_bytes();
             // Convert big endian to little endian
             b[0..4].reverse();
             b[4..6].reverse();
             b[6..8].reverse();
-            PyBytes::new(py, &b)
+            PyBytes::new_bound(py, &b)
         }
 
         #[getter]
@@ -308,14 +294,16 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
         fn time(&self, py: Python) -> PyResult<PyObject> {
             // We use Python's API since the result is much larger than u128.
             let time_hi_version = self.time_hi_version().to_object(py);
-            let time_hi_version = time_hi_version.call_method(py, "__and__", (0x0fff,), None)?;
-            let time_hi_version = time_hi_version.call_method(py, "__lshift__", (48,), None)?;
+            let time_hi_version =
+                time_hi_version.call_method_bound(py, "__and__", (0x0fff,), None)?;
+            let time_hi_version =
+                time_hi_version.call_method_bound(py, "__lshift__", (48,), None)?;
             let time_mid = self.time_mid().to_object(py);
-            let time_mid = time_mid.call_method(py, "__lshift__", (32,), None)?;
+            let time_mid = time_mid.call_method_bound(py, "__lshift__", (32,), None)?;
             let time_low = self.time_low().to_object(py);
             let time = time_hi_version;
-            let time = time.call_method(py, "__or__", (time_mid,), None)?;
-            let time = time.call_method(py, "__or__", (time_low,), None)?;
+            let time = time.call_method_bound(py, "__or__", (time_mid,), None)?;
+            let time = time.call_method_bound(py, "__or__", (time_low,), None)?;
             Ok(time)
         }
 
@@ -360,12 +348,12 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
             Ok(self.int())
         }
 
-        pub fn __getstate__<'py>(&self, py: Python<'py>) -> PyResult<&'py PyBytes> {
-            Ok(PyBytes::new(py, self.bytes()))
+        pub fn __getstate__<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyBytes>> {
+            Ok(PyBytes::new_bound(py, self.bytes()))
         }
 
         pub fn __setstate__(&mut self, py: Python, state: PyObject) -> PyResult<()> {
-            let bytes_state = state.extract::<&PyBytes>(py)?;
+            let bytes_state = state.extract::<Bound<'_, PyBytes>>(py)?;
             let uuid_builder = Builder::from_slice(bytes_state.as_bytes());
 
             match uuid_builder {
@@ -399,27 +387,27 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
             self.clone()
         }
 
-        pub fn __deepcopy__(&self, _memo: &PyDict) -> Self {
+        pub fn __deepcopy__(&self, _memo: &Bound<PyDict>) -> Self {
             // fast bitwise copy instead of python's pickling process
             self.clone()
         }
     }
 
-    #[pyfn(m, name = "uuid3")]
-    fn uuid3(namespace: &UUID, name: &PyBytes) -> UUID {
+    #[pyfunction]
+    fn uuid3(namespace: &UUID, name: &Bound<PyBytes>) -> UUID {
         UUID {
             handle: Uuid::new_v3(&namespace.handle, name.as_bytes()),
         }
     }
 
-    #[pyfn(m, name = "uuid5")]
-    fn uuid5(namespace: &UUID, name: &PyBytes) -> UUID {
+    #[pyfunction]
+    fn uuid5(namespace: &UUID, name: &Bound<PyBytes>) -> UUID {
         UUID {
             handle: Uuid::new_v5(&namespace.handle, name.as_bytes()),
         }
     }
 
-    #[pyfn(m, name = "uuid4_bulk")]
+    #[pyfunction]
     fn uuid4_bulk(py: Python, n: usize) -> Vec<UUID> {
         py.allow_threads(|| {
             iter::repeat_with(|| UUID {
@@ -430,7 +418,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
         })
     }
 
-    #[pyfn(m, name = "uuid4_as_strings_bulk")]
+    #[pyfunction]
     fn uuid4_as_strings_bulk(py: Python, n: usize) -> Vec<String> {
         py.allow_threads(|| {
             iter::repeat_with(|| {
@@ -444,14 +432,15 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
         })
     }
 
-    #[pyfn(m, name = "uuid4")]
+    #[pyfunction]
     fn uuid4() -> UUID {
         UUID {
             handle: Uuid::new_v4(),
         }
     }
 
-    #[pyfn(m, name = "uuid1")]
+    #[pyfunction]
+    #[pyo3(signature = (node=None, clock_seq=None))]
     fn uuid1(py: Python, node: Option<u64>, clock_seq: Option<u16>) -> PyResult<UUID> {
         let node = match node {
             Some(node) => {
@@ -461,7 +450,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
             _ => {
                 // TODO: use a native implementation of getnode() instead of calling Python.
                 // This is already quite fast, since the value is cached in Python.
-                let py_uuid = PyModule::import(py, "uuid")?;
+                let py_uuid = PyModule::import_bound(py, "uuid")?;
                 let node = py_uuid.getattr("getnode")?.call0()?.extract::<u64>()?;
                 let bytes = node.to_be_bytes();
                 [bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7]]
@@ -489,15 +478,14 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
     ///   - https://www.edgedb.com/docs/stdlib/uuid#function::std::uuid_generate_v1mc
     ///   - https://supabase.com/blog/choosing-a-postgres-primary-key#uuidv1
     ///   -
-    #[pyfn(m, name = "uuid_v1mc")]
+    #[pyfunction]
     fn uuid_v1mc() -> UUID {
         UUID {
             handle: Uuid::now_v1(&random_node_id()),
         }
     }
 
-
-    #[pyfn(m, name = "uuid7_bulk")]
+    #[pyfunction]
     fn uuid7_bulk(py: Python, n: usize) -> Vec<UUID> {
         py.allow_threads(|| {
             iter::repeat_with(|| UUID {
@@ -508,7 +496,7 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
         })
     }
 
-    #[pyfn(m, name = "uuid7_as_strings_bulk")]
+    #[pyfunction]
     fn uuid7_as_strings_bulk(py: Python, n: usize) -> Vec<String> {
         py.allow_threads(|| {
             iter::repeat_with(|| {
@@ -522,14 +510,10 @@ fn fastuuid(_py: Python, m: &PyModule) -> PyResult<()> {
         })
     }
 
-    #[pyfn(m, name = "uuid7")]
+    #[pyfunction]
     fn uuid7() -> UUID {
         UUID {
             handle: Uuid::now_v7(),
         }
     }
-
-    m.add_class::<UUID>()?;
-
-    Ok(())
 }

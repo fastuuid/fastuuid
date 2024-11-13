@@ -3,14 +3,12 @@ from concurrent.futures import ThreadPoolExecutor
 from pickle import dumps, loads
 from random import getrandbits
 from uuid import UUID, uuid1, uuid3, uuid4, uuid5
-from uuid_extensions import uuid7, uuid7str
 
 import pytest
 from uuid_extensions import uuid7, uuid7str
 
 from fastuuid import UUID as FastUUID
 from fastuuid import uuid1 as fastuuid1
-from fastuuid import uuid_v1mc as fast_uuid_v1mc
 from fastuuid import uuid3 as fastuuid3
 from fastuuid import uuid4 as fastuuid4
 from fastuuid import uuid4_as_strings_bulk, uuid4_bulk

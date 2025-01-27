@@ -19,7 +19,6 @@ classifier = [
   "Programming Language :: Python",
   "Programming Language :: Python :: 3 :: Only",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.7",
   "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
@@ -32,5 +31,5 @@ classifier = [
 ]
 maintainer = "Omer Katz"
 maintainer-email = "omer.drow@gmail.com"
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 urls = { homepage = "https://github.com/thedrow/fastuuid/" }

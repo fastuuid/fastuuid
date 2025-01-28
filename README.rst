@@ -61,8 +61,9 @@ Contributing
 
 We are running tests and build's for all target python versions for every PR.
 
-Updating version number is in `Cargo.toml` file. To release a new version, update the version number in `Cargo.toml` and create a new tag with the version number. Pipeline will pick it up and publish it to PyPI.
-
+Updating version number is in `Cargo.toml` file. 
+To release a new version, update the version number in `Cargo.toml` and create a new tag with the version number. 
+Pipeline will pick it up and publish it to PyPI.
 
 
 PRs are welcome.

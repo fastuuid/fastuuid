@@ -1,7 +1,8 @@
 fastuuid
 ========
 
-[![FastUUID CI/CD](https://github.com/fastuuid/fastuuid/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/fastuuid/fastuuid/actions/workflows/ci-cd.yml)
+.. image:: https://github.com/fastuuid/fastuuid/actions/workflows/ci-cd.yml/badge.svg
+    :target: https://github.com/fastuuid/fastuuid/actions/workflows/ci-cd.yml
 
 FastUUID is a library which provides CPython bindings to Rust's UUID library.
 

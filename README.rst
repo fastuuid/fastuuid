@@ -1,8 +1,8 @@
 fastuuid
 ========
 
-.. image:: https://travis-ci.com/thedrow/fastuuid.svg?branch=master
-    :target: https://travis-ci.com/thedrow/fastuuid
+.. image:: https://github.com/fastuuid/fastuuid/actions/workflows/ci-cd.yml/badge.svg
+    :target: https://github.com/fastuuid/fastuuid/actions/workflows/ci-cd.yml
 
 FastUUID is a library which provides CPython bindings to Rust's UUID library.
 
@@ -55,5 +55,16 @@ tests/test_benchmarks.py::test_uuidv5                    3.7190038710832596e-06 
 =======================================================  ======================  ======================  ======================  ======================  ======================  ======================  ==========  ==================  ======  ==========
 
 Run them yourself to verify.
+
+
+Contributing
+============
+
+We are running tests and build's for all target python versions for every PR.
+
+The version number is stored in the `Cargo.toml` file. 
+To release a new version, update the version number in `Cargo.toml` and create a new tag with the version number. 
+Pipeline will pick it up and publish it to PyPI.
+
 
 PRs are welcome.

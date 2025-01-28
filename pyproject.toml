@@ -12,7 +12,7 @@ multi_line_output = 3
 [project]
 name = "fastuuid"
 dynamic = ["version"]
-classifier = [
+classifiers = [
   "Development Status :: 4 - Beta",
   "License :: OSI Approved :: BSD License",
   "Programming Language :: Rust",
@@ -29,7 +29,8 @@ classifier = [
   "Topic :: Software Development :: Libraries",
   "Topic :: Software Development :: Libraries :: Python Modules"
 ]
-maintainer = "Omer Katz"
-maintainer-email = "omer.drow@gmail.com"
+maintainers = [
+  {name = "Omer Katz", email = "omer.drow@gmail.com"}
+]
 requires-python = ">=3.8"
 urls = { homepage = "https://github.com/thedrow/fastuuid/" }

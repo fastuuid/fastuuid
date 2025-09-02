@@ -31,10 +31,22 @@ jobs:
         run: tox
   build:
     needs: test
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          # AMD64 builds
+          - runner: ubuntu-latest
+            arch: amd64
+          - runner: windows-latest
+            arch: amd64
+          - runner: macos-13
+            arch: amd64
+          # ARM64 builds
+          - runner: ubuntu-latest-arm64
+            arch: arm64
+          - runner: macos-latest
+            arch: arm64
         python-version: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
     steps:
       - uses: actions/checkout@v4
@@ -62,11 +74,23 @@ jobs:
 
   build-and-publish:
     needs: test
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.runner }}
     if: github.event_name == 'push' && contains(github.ref, '.')
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          # AMD64 builds
+          - runner: ubuntu-latest
+            arch: amd64
+          - runner: windows-latest
+            arch: amd64
+          - runner: macos-13
+            arch: amd64
+          # ARM64 builds
+          - runner: ubuntu-latest-arm64
+            arch: arm64
+          - runner: macos-latest
+            arch: arm64
         python-version: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
     steps:
       - uses: actions/checkout@v4

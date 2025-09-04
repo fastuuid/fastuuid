@@ -47,6 +47,13 @@ jobs:
             arch: arm64
           - runner: macos-latest
             arch: arm64
+          # MUSL builds
+          - runner: ubuntu-latest
+            arch: amd64
+            target: x86_64-unknown-linux-musl
+          - runner: ubuntu-latest
+            arch: arm64
+            target: aarch64-unknown-linux-musl
         python-version: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
     steps:
       - uses: actions/checkout@v4
@@ -58,16 +65,27 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install maturin[zig] twine
+      - name: Install musl tools
+        if: matrix.target && contains(matrix.target, 'musl')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools musl-dev
+          rustup target add ${{ matrix.target }}
       - name: Build wheels
-        run: maturin build --release
+        run: |
+          if [ -n "${{ matrix.target }}" ]; then
+            maturin build --release --target ${{ matrix.target }}
+          else
+            maturin build --release
+          fi
       - name: Build wheels for older linux versions
-        if: matrix.os == 'ubuntu-latest'
+        if: runner.os == 'Linux' && !matrix.target
         # Build a wheel for the current python version in release mode
         # When running on linux, use zig to build the oldest possible manylinux wheel
         # In addition, check the wheel with auditwheel, but without auto-repair
         run: maturin build --release --compatibility --zig --auditwheel check
       - name: Build sdist
-        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
+        if: runner.os == 'Linux' && !matrix.target && matrix.python-version == '3.9'
         run: maturin sdist
       - name: Display structure of built files
         run: ls -R target/wheels
@@ -91,6 +109,13 @@ jobs:
             arch: arm64
           - runner: macos-latest
             arch: arm64
+          # MUSL builds
+          - runner: ubuntu-latest
+            arch: amd64
+            target: x86_64-unknown-linux-musl
+          - runner: ubuntu-latest
+            arch: arm64
+            target: aarch64-unknown-linux-musl
         python-version: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
     steps:
       - uses: actions/checkout@v4
@@ -102,16 +127,27 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install maturin[zig] twine
+      - name: Install musl tools
+        if: matrix.target && contains(matrix.target, 'musl')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools musl-dev
+          rustup target add ${{ matrix.target }}
       - name: Build wheels
-        run: maturin build --release
+        run: |
+          if [ -n "${{ matrix.target }}" ]; then
+            maturin build --release --target ${{ matrix.target }}
+          else
+            maturin build --release
+          fi
       - name: Build wheels for older linux versions
-        if: matrix.os == 'ubuntu-latest'
+        if: runner.os == 'Linux' && !matrix.target
         # Build a wheel for the current python version in release mode
         # When running on linux, use zig to build the oldest possible manylinux wheel
         # In addition, check the wheel with auditwheel, but without auto-repair
         run: maturin build --release --compatibility --zig --auditwheel check
       - name: Build sdist
-        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
+        if: runner.os == 'Linux' && !matrix.target && matrix.python-version == '3.9'
         run: maturin sdist
       - name: Display structure of built files
         run: ls -R target/wheels

@@ -12,10 +12,22 @@ on:
 
 jobs:
   test:
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.runner }}
+    container: ${{ matrix.container }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          # Standard OS tests
+          - runner: ubuntu-latest
+            os: ubuntu-latest
+          - runner: windows-latest
+            os: windows-latest
+          - runner: macos-latest
+            os: macos-latest
+          # Alpine Linux (musl) tests
+          - runner: ubuntu-latest
+            os: alpine
+            container: alpine:latest
         python-version: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
     steps:
       - uses: actions/checkout@v4

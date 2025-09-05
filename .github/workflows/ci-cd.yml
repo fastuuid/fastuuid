@@ -75,7 +75,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
+          python3 -m pip install --upgrade pip
           pip install maturin[zig] twine
       - name: Install musl tools
         if: matrix.target && contains(matrix.target, 'musl')

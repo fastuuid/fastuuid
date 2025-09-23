@@ -31,67 +31,77 @@ jobs:
         run: tox
   build:
     needs: test
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.conf.os }}
+    name: ${{ matrix.conf.os }}-${{ matrix.python-version }}-${{ matrix.conf.target-triple }}-${{ matrix.conf.target }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
+        conf:
+          - { os: ubuntu-latest }
+          - { os: ubuntu-latest, target: x86_64,  target-triple: x86_64-unknown-linux-gnu,             manylinux: auto, auditwheel: check }
+          - { os: ubuntu-latest, target: x86_64,  target-triple: x86_64-unknown-linux-musl,            manylinux: musllinux_1_1, auditwheel: repair }
+          - { os: ubuntu-latest, target: i686,    target-triple: i686-unknown-linux-gnu,               manylinux: auto, auditwheel: check }
+          - { os: ubuntu-latest, target: i686,    target-triple: i686-unknown-linux-musl,              manylinux: musllinux_1_1, auditwheel: repair }
+          - { os: ubuntu-latest, target: aarch64, target-triple: aarch64-unknown-linux-gnu,            manylinux: auto, auditwheel: check }
+          - { os: ubuntu-latest, target: aarch64, target-triple: aarch64-unknown-linux-musl,           manylinux: musllinux_1_1, auditwheel: repair }
+
+          - { os: macos-13, target: x86_64,     target-triple: x86_64-apple-darwin, auditwheel: check }
+          - { os: macos-13, target: aarch64,    target-triple: aarch64-apple-darwin, auditwheel: check }
+          - { os: macos-13, target: universal2, target-triple: x86_64-apple-darwin, auditwheel: check }
+
+          - { os: windows-latest, target: x86_64, target-triple: x86_64-pc-windows-msvc, python-architecture: x64, auditwheel: check }
+          - { os: windows-latest, target: i686,   target-triple: i686-pc-windows-msvc,   python-architecture: x86, auditwheel: check }
+
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install maturin[zig] twine
-      - name: Build wheels
-        run: maturin build --release
+          architecture: ${{ matrix.conf.python-architecture }}
+      - name: Build wheel
+        if: matrix.conf.auditwheel && matrix.conf.target
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.conf.target }}
+          manylinux: ${{ matrix.conf.manylinux }}
+          # Auto-repair is only required for musl builds, otherwise it's check
+          args: -i ${{ matrix.python-version }} --release --auditwheel ${{ matrix.conf.auditwheel }}
       - name: Build wheels for older linux versions
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.conf.target == ''
         # Build a wheel for the current python version in release mode
         # When running on linux, use zig to build the oldest possible manylinux wheel
         # In addition, check the wheel with auditwheel, but without auto-repair
-        run: maturin build --release --compatibility --zig --auditwheel check
-      - name: Build sdist
-        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.conf.target }}
+          args: -i ${{ matrix.python-version }} --release --compatibility --zig --auditwheel check
+      - name: Build sdistx
+        if: matrix.conf.target == '' && matrix.python-version == '3.9'
         run: maturin sdist
       - name: Display structure of built files
         run: ls -R target/wheels
 
-  build-and-publish:
-    needs: test
-    runs-on: ${{ matrix.os }}
-    if: github.event_name == 'push' && contains(github.ref, '.')
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install dependencies
+      # Could use 'distro: alpine_latest' in 'run-on-arch-action' but seems difficult to install a specific version of python
+      # so we'll just use existing python alpine images to test import and cli use w/o testing archs other than x86_64
+      - name: Install built wheel and Test (musllinux)
+        if: startsWith(matrix.conf.manylinux, 'musl') && matrix.conf.target == 'x86_64'
         run: |
-          python -m pip install --upgrade pip
-          pip install maturin[zig] twine
-      - name: Build wheels
-        run: maturin build --release
-      - name: Build wheels for older linux versions
-        if: matrix.os == 'ubuntu-latest'
-        # Build a wheel for the current python version in release mode
-        # When running on linux, use zig to build the oldest possible manylinux wheel
-        # In addition, check the wheel with auditwheel, but without auto-repair
-        run: maturin build --release --compatibility --zig --auditwheel check
-      - name: Build sdist
-        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
-        run: maturin sdist
-      - name: Display structure of built files
-        run: ls -R target/wheels
+          docker run \
+            -v $(pwd)/target/wheels:/wheels \
+            --rm python:${{ matrix.python-version }}-alpine sh \
+              -c "pip install fastuuid --no-index --find-links /wheels && python -c 'import fastuuid'"
+      - name: Install built wheel and Test (Native)
+        if: |
+          !startsWith(matrix.conf.manylinux, 'musl') && 
+          !( matrix.python-version == 'pypy3.10' && runner.os == 'Windows' ) &&
+          ( matrix.conf.target == 'x86_64' || matrix.conf.target == 'universal2' )
+        run: |
+          # Second install guarantees it's going to install from local dir w/ --no-index
+          # use first to get in dev dependencies
+          python -m pip install fastuuid --find-links target/wheels --force-reinstall
+          python -c "import fastuuid; print('Package imported successfully')"
       - name: Publish to PyPI
+        if: github.event_name == 'push' && contains(github.ref, '.')
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}

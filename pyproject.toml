@@ -11,6 +11,7 @@ multi_line_output = 3
 
 [project]
 name = "fastuuid"
+description = "Python bindings to Rust's UUID library."
 dynamic = ["version"]
 classifiers = [
   "Development Status :: 4 - Beta",

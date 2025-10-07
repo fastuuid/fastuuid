@@ -291,7 +291,7 @@ mod fastuuid {
         }
 
         #[getter]
-        fn time(&self, py: Python) -> PyResult<PyObject> {
+        fn time(&self, py: Python) -> PyResult<Py<PyAny>> {
             // We use Python's API since the result is much larger than u128.
             let Ok(time_hi_version) = self.time_hi_version().into_pyobject(py);
             let time_hi_version = time_hi_version.call_method("__and__", (0x0fff,), None)?;
@@ -350,7 +350,7 @@ mod fastuuid {
             Ok(PyBytes::new(py, self.bytes()))
         }
 
-        pub fn __setstate__(&mut self, py: Python, state: PyObject) -> PyResult<()> {
+        pub fn __setstate__(&mut self, py: Python, state: Py<PyAny>) -> PyResult<()> {
             let bytes_state = state.extract::<Bound<'_, PyBytes>>(py)?;
             let uuid_builder = Builder::from_slice(bytes_state.as_bytes());
 
@@ -407,7 +407,7 @@ mod fastuuid {
 
     #[pyfunction]
     fn uuid4_bulk(py: Python, n: usize) -> Vec<UUID> {
-        py.allow_threads(|| {
+        py.detach(|| {
             iter::repeat_with(|| UUID {
                 handle: Uuid::new_v4(),
             })
@@ -418,7 +418,7 @@ mod fastuuid {
 
     #[pyfunction]
     fn uuid4_as_strings_bulk(py: Python, n: usize) -> Vec<String> {
-        py.allow_threads(|| {
+        py.detach(|| {
             iter::repeat_with(|| {
                 (*Uuid::new_v4()
                     .simple()
@@ -485,7 +485,7 @@ mod fastuuid {
 
     #[pyfunction]
     fn uuid7_bulk(py: Python, n: usize) -> Vec<UUID> {
-        py.allow_threads(|| {
+        py.detach(|| {
             iter::repeat_with(|| UUID {
                 handle: Uuid::now_v7(),
             })
@@ -496,7 +496,7 @@ mod fastuuid {
 
     #[pyfunction]
     fn uuid7_as_strings_bulk(py: Python, n: usize) -> Vec<String> {
-        py.allow_threads(|| {
+        py.detach(|| {
             iter::repeat_with(|| {
                 (*Uuid::now_v7()
                     .simple()

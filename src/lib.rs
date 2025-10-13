@@ -233,8 +233,12 @@ mod fastuuid {
         }
 
         #[getter]
-        fn version(&self) -> usize {
-            self.handle.get_version_num()
+        fn version(&self) -> Option<usize> {
+            // The version bits are only meaningful for RFC 4122/9562 UUIDs.
+            match self.handle.get_variant() {
+                Variant::RFC4122 => Some(self.handle.get_version_num()),
+                _ => None,
+            }
         }
 
         #[getter]

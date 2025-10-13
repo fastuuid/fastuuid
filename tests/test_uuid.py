@@ -255,6 +255,22 @@ def test_urn_property(u):
 
 
 @given(uuids())
+def test_variant_property(u):
+    expected = u.variant
+    actual = UUID(str(u)).variant
+
+    assert expected == actual
+
+
+@given(uuids())
+def test_version_property(u):
+    expected = u.version
+    actual = UUID(str(u)).version
+
+    assert expected == actual
+
+
+@given(uuids())
 def test_bytes_le_property(u):
     expected = u.bytes_le
     actual = UUID(str(u)).bytes_le

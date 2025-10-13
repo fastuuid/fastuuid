@@ -1,6 +1,7 @@
 import copy
 import pickle
 import re
+import sys
 import uuid
 
 import pytest
@@ -312,6 +313,8 @@ def test_clock_seq_low_property(u):
 
 @given(uuids())
 def test_time_property(u):
+    if u.version in {6, 7} and sys.version_info < (3, 14):
+        return  # Python < 3.14 returns the wrong time for UUIDv6 and v7
     expected = u.time
     actual = UUID(str(u)).time
 

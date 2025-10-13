@@ -213,7 +213,7 @@ mod fastuuid {
             b[0..4].reverse();
             b[4..6].reverse();
             b[6..8].reverse();
-            PyBytes::new_bound(py, &b)
+            PyBytes::new(py, &b)
         }
 
         #[getter]
@@ -291,20 +291,18 @@ mod fastuuid {
         }
 
         #[getter]
-        fn time(&self, py: Python) -> PyResult<PyObject> {
-            // We use Python's API since the result is much larger than u128.
-            let time_hi_version = self.time_hi_version().to_object(py);
-            let time_hi_version =
-                time_hi_version.call_method_bound(py, "__and__", (0x0fff,), None)?;
-            let time_hi_version =
-                time_hi_version.call_method_bound(py, "__lshift__", (48,), None)?;
-            let time_mid = self.time_mid().to_object(py);
-            let time_mid = time_mid.call_method_bound(py, "__lshift__", (32,), None)?;
-            let time_low = self.time_low().to_object(py);
-            let time = time_hi_version;
-            let time = time.call_method_bound(py, "__or__", (time_mid,), None)?;
-            let time = time.call_method_bound(py, "__or__", (time_low,), None)?;
-            Ok(time)
+        fn time(&self) -> u128 {
+            let int = self.int();
+            let time_hi = int >> 64 & 0x0fff;
+            let time_mid = int >> 80 & 0xffff;
+            let time_lo = int >> 96;
+            match (self.handle.get_variant(), self.handle.get_version()) {
+                (Variant::RFC4122, Some(Version::SortMac)) => {
+                    time_lo << 28 | time_mid << 12 | time_hi
+                }
+                (Variant::RFC4122, Some(Version::SortRand)) => int >> 80,
+                _ => time_hi << 48 | time_mid << 32 | time_lo,
+            }
         }
 
         #[getter]
@@ -349,10 +347,10 @@ mod fastuuid {
         }
 
         pub fn __getstate__<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyBytes>> {
-            Ok(PyBytes::new_bound(py, self.bytes()))
+            Ok(PyBytes::new(py, self.bytes()))
         }
 
-        pub fn __setstate__(&mut self, py: Python, state: PyObject) -> PyResult<()> {
+        pub fn __setstate__(&mut self, py: Python, state: Py<PyAny>) -> PyResult<()> {
             let bytes_state = state.extract::<Bound<'_, PyBytes>>(py)?;
             let uuid_builder = Builder::from_slice(bytes_state.as_bytes());
 
@@ -368,13 +366,13 @@ mod fastuuid {
         }
 
         #[allow(clippy::type_complexity)]
-        pub fn __getnewargs__(
+        pub fn __getnewargs__<'py>(
             &self,
         ) -> PyResult<(
             Option<&str>,
-            Option<&PyBytes>,
-            Option<&PyBytes>,
-            Option<&PyTuple>,
+            Option<&Bound<'py, PyBytes>>,
+            Option<&Bound<'py, PyBytes>>,
+            Option<&Bound<'py, PyTuple>>,
             Option<u128>,
             Option<u8>,
         )> {
@@ -409,7 +407,7 @@ mod fastuuid {
 
     #[pyfunction]
     fn uuid4_bulk(py: Python, n: usize) -> Vec<UUID> {
-        py.allow_threads(|| {
+        py.detach(|| {
             iter::repeat_with(|| UUID {
                 handle: Uuid::new_v4(),
             })
@@ -420,7 +418,7 @@ mod fastuuid {
 
     #[pyfunction]
     fn uuid4_as_strings_bulk(py: Python, n: usize) -> Vec<String> {
-        py.allow_threads(|| {
+        py.detach(|| {
             iter::repeat_with(|| {
                 (*Uuid::new_v4()
                     .simple()
@@ -450,7 +448,7 @@ mod fastuuid {
             _ => {
                 // TODO: use a native implementation of getnode() instead of calling Python.
                 // This is already quite fast, since the value is cached in Python.
-                let py_uuid = PyModule::import_bound(py, "uuid")?;
+                let py_uuid = PyModule::import(py, "uuid")?;
                 let node = py_uuid.getattr("getnode")?.call0()?.extract::<u64>()?;
                 let bytes = node.to_be_bytes();
                 [bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7]]
@@ -487,7 +485,7 @@ mod fastuuid {
 
     #[pyfunction]
     fn uuid7_bulk(py: Python, n: usize) -> Vec<UUID> {
-        py.allow_threads(|| {
+        py.detach(|| {
             iter::repeat_with(|| UUID {
                 handle: Uuid::now_v7(),
             })
@@ -498,7 +496,7 @@ mod fastuuid {
 
     #[pyfunction]
     fn uuid7_as_strings_bulk(py: Python, n: usize) -> Vec<String> {
-        py.allow_threads(|| {
+        py.detach(|| {
             iter::repeat_with(|| {
                 (*Uuid::now_v7()
                     .simple()

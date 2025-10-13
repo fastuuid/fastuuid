@@ -296,7 +296,13 @@ mod fastuuid {
             let time_hi = int >> 64 & 0x0fff;
             let time_mid = int >> 80 & 0xffff;
             let time_lo = int >> 96;
-            time_hi << 48 | time_mid << 32 | time_lo
+            match (self.handle.get_variant(), self.handle.get_version()) {
+                (Variant::RFC4122, Some(Version::SortMac)) => {
+                    time_lo << 28 | time_mid << 12 | time_hi
+                }
+                (Variant::RFC4122, Some(Version::SortRand)) => int >> 80,
+                _ => time_hi << 48 | time_mid << 32 | time_lo,
+            }
         }
 
         #[getter]

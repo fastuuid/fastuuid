@@ -291,18 +291,12 @@ mod fastuuid {
         }
 
         #[getter]
-        fn time(&self, py: Python) -> PyResult<Py<PyAny>> {
-            // We use Python's API since the result is much larger than u128.
-            let Ok(time_hi_version) = self.time_hi_version().into_pyobject(py);
-            let time_hi_version = time_hi_version.call_method("__and__", (0x0fff,), None)?;
-            let time_hi_version = time_hi_version.call_method("__lshift__", (48,), None)?;
-            let Ok(time_mid) = self.time_mid().into_pyobject(py);
-            let time_mid = time_mid.call_method("__lshift__", (32,), None)?;
-            let Ok(time_low) = self.time_low().into_pyobject(py);
-            let time = time_hi_version;
-            let time = time.call_method("__or__", (time_mid,), None)?;
-            let time = time.call_method("__or__", (time_low,), None)?;
-            Ok(time.unbind())
+        fn time(&self) -> u128 {
+            let int = self.int();
+            let time_hi = int >> 64 & 0x0fff;
+            let time_mid = int >> 80 & 0xffff;
+            let time_lo = int >> 96;
+            time_hi << 48 | time_mid << 32 | time_lo
         }
 
         #[getter]

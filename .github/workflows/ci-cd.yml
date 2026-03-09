@@ -15,8 +15,15 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest, windows-11-arm]
         python-version: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13', '3.14']
+        exclude:
+          - os: windows-11-arm
+            python-version: '3.8'
+          - os: windows-11-arm
+            python-version: '3.9'
+          - os: windows-11-arm
+            python-version: '3.10'
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
@@ -50,6 +57,14 @@ jobs:
 
           - { os: windows-latest, target: x86_64, target-triple: x86_64-pc-windows-msvc, python-architecture: x64, auditwheel: check }
           - { os: windows-latest, target: i686,   target-triple: i686-pc-windows-msvc,   python-architecture: x86, auditwheel: check }
+          - { os: windows-11-arm, target: aarch64,   target-triple: aarch64-pc-windows-msvc,   python-architecture: arm64, auditwheel: check }
+        exclude:
+          - conf: { os: windows-11-arm }
+            python-version: '3.8'
+          - conf: { os: windows-11-arm }
+            python-version: '3.9'
+          - conf: { os: windows-11-arm }
+            python-version: '3.10'
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6

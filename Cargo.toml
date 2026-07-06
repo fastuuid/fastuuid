@@ -14,7 +14,7 @@ crate-type = ["cdylib"]
 rand = "0.8"
 
 [dependencies.pyo3]
-version = "0.28"
+version = "0.29"
 features = ["extension-module"]
 
 [dependencies.uuid]

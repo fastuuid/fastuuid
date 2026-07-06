@@ -38,7 +38,7 @@ fn random_node_id() -> [u8; 6] {
 mod fastuuid {
     use super::*;
 
-    #[pyclass(subclass, freelist = 1000)]
+    #[pyclass(subclass, freelist = 1000, from_py_object)]
     #[derive(Clone)]
     #[allow(clippy::upper_case_acronyms)]
     struct UUID {
@@ -120,7 +120,7 @@ mod fastuuid {
                     if f.len() != 6 {
                         Err(PyErr::new::<PyValueError, &str>("fields is not a 6-tuple"))
                     } else {
-                        let time_low = match f.get_item(0)?.downcast::<PyInt>()?.extract::<u32>() {
+                        let time_low = match f.get_item(0)?.cast::<PyInt>()?.extract::<u32>() {
                             Ok(time_low) => Ok(u128::from(time_low)),
                             Err(_) => Err(PyErr::new::<PyValueError, &str>(
                                 "field 1 out of range (need a 32-bit value)",
@@ -129,7 +129,7 @@ mod fastuuid {
 
                         let time_low = time_low?;
 
-                        let time_mid = match f.get_item(1)?.downcast::<PyInt>()?.extract::<u16>() {
+                        let time_mid = match f.get_item(1)?.cast::<PyInt>()?.extract::<u16>() {
                             Ok(time_mid) => Ok(u128::from(time_mid)),
                             Err(_) => Err(PyErr::new::<PyValueError, &str>(
                                 "field 2 out of range (need a 16-bit value)",
@@ -139,7 +139,7 @@ mod fastuuid {
                         let time_mid = time_mid?;
 
                         let time_high_version =
-                            match f.get_item(2)?.downcast::<PyInt>()?.extract::<u16>() {
+                            match f.get_item(2)?.cast::<PyInt>()?.extract::<u16>() {
                                 Ok(time_high_version) => Ok(u128::from(time_high_version)),
                                 Err(_) => Err(PyErr::new::<PyValueError, &str>(
                                     "field 3 out of range (need a 16-bit value)",
@@ -149,7 +149,7 @@ mod fastuuid {
                         let time_high_version = time_high_version?;
 
                         let clock_seq_hi_variant =
-                            match f.get_item(3)?.downcast::<PyInt>()?.extract::<u8>() {
+                            match f.get_item(3)?.cast::<PyInt>()?.extract::<u8>() {
                                 Ok(clock_seq_hi_variant) => Ok(u128::from(clock_seq_hi_variant)),
                                 Err(_) => Err(PyErr::new::<PyValueError, &str>(
                                     "field 4 out of range (need a 8-bit value)",
@@ -159,7 +159,7 @@ mod fastuuid {
                         let clock_seq_hi_variant = clock_seq_hi_variant?;
 
                         let clock_seq_low =
-                            match f.get_item(4)?.downcast::<PyInt>()?.extract::<u8>() {
+                            match f.get_item(4)?.cast::<PyInt>()?.extract::<u8>() {
                                 Ok(clock_seq_low) => Ok(u128::from(clock_seq_low)),
                                 Err(_) => Err(PyErr::new::<PyValueError, &str>(
                                     "field 5 out of range (need a 8-bit value)",
@@ -168,7 +168,7 @@ mod fastuuid {
 
                         let clock_seq_low = clock_seq_low?;
 
-                        let node = f.get_item(5)?.downcast::<PyInt>()?.extract::<u128>()?;
+                        let node = f.get_item(5)?.cast::<PyInt>()?.extract::<u128>()?;
                         if node >= (1 << 48) {
                             return Err(PyErr::new::<PyValueError, &str>(
                                 "field 6 out of range (need a 48-bit value)",

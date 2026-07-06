@@ -38,7 +38,7 @@ fn random_node_id() -> [u8; 6] {
 mod fastuuid {
     use super::*;
 
-    #[pyclass(subclass, freelist = 1000)]
+    #[pyclass(subclass, freelist = 1000, from_py_object)]
     #[derive(Clone)]
     #[allow(clippy::upper_case_acronyms)]
     struct UUID {

@@ -18,7 +18,7 @@ version = "0.26"
 features = ["extension-module"]
 
 [dependencies.uuid]
-version = "1"
+version = "1.23"
 features = ["v1", "v3", "v4", "v5", "v7"]
 
 [profile.release]

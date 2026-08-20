@@ -11,7 +11,7 @@ use rand::random;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::iter;
-use uuid::{Builder, Context, Timestamp, Uuid, Variant, Version};
+use uuid::{Builder, ContextV1, Timestamp, Uuid, Variant, Version};
 
 /// Generate a random node ID.
 /// In hope to be compliant with RFC4122, we set the multicast bit to 1.
@@ -460,9 +460,9 @@ mod fastuuid {
         };
         Ok(match clock_seq {
             Some(clock_seq) => {
-                // Timestamp::now(Context::new(clock_seq)) acquires an Atomic<u16>.
+                // Timestamp::now(ContextV1::new(clock_seq)) acquires an Atomic<u16>.
                 // If we can avoid it, we can probably get another performance boost.
-                let ts = Timestamp::now(Context::new(clock_seq));
+                let ts = Timestamp::now(ContextV1::new(clock_seq));
                 UUID {
                     handle: Uuid::new_v1(ts, &node),
                 }

@@ -34,7 +34,7 @@ fn random_node_id() -> [u8; 6] {
     ]
 }
 
-#[pymodule]
+#[pymodule(gil_used = false)]
 mod fastuuid {
     use super::*;
 
